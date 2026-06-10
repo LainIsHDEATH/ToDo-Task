@@ -1,8 +1,13 @@
 package ua.ivan.todo.tasks.config;
 
+import org.mapstruct.InjectionStrategy;
 import org.mapstruct.MapperConfig;
 import org.mapstruct.ReportingPolicy;
 
-@MapperConfig(unmappedTargetPolicy = ReportingPolicy.ERROR)
+@MapperConfig(
+        componentModel = "spring",
+        injectionStrategy = InjectionStrategy.CONSTRUCTOR,
+        unmappedTargetPolicy = ReportingPolicy.ERROR
+)
 public interface MapStructConfig {
 }
