@@ -8,20 +8,20 @@ import ua.ivan.todo.tasks.user.model.Role;
 
 public record UserUpdateRequest(
 
-        @NotBlank
-        @Size(max = 100)
+        @NotBlank(message = "First name is required")
+        @Size(max = 100, message = "First name must not exceed 100 characters")
         String firstName,
 
-        @NotBlank
-        @Size(max = 100)
+        @NotBlank(message = "Last name is required")
+        @Size(max = 100, message = "Last name must not exceed 100 characters")
         String lastName,
 
-        @NotBlank
-        @Email
-        @Size(max = 255)
+        @NotBlank(message = "Email is required")
+        @Email(message = "Email must be valid")
+        @Size(max = 255, message = "Email must not exceed 255 characters")
         String email,
 
-        @NotNull
+        @NotNull(message = "Role is required")
         Role role
 ) {
 }
