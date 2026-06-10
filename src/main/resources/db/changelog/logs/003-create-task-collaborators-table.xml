@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.25.xsd">
+
+    <changeSet id="003-create-task-collaborators-table" author="Ivan">
+        <createTable tableName="task_collaborators">
+            <column name="task_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="user_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addPrimaryKey tableName="task_collaborators"
+                       columnNames="task_id, user_id"
+                       constraintName="pk_task_collaborators"/>
+
+        <addForeignKeyConstraint baseTableName="task_collaborators"
+                                 baseColumnNames="task_id"
+                                 constraintName="fk_task_collaborators_task"
+                                 referencedTableName="tasks"
+                                 referencedColumnNames="id"
+                                 onDelete="CASCADE"/>
+
+        <addForeignKeyConstraint baseTableName="task_collaborators"
+                                 baseColumnNames="user_id"
+                                 constraintName="fk_task_collaborators_user"
+                                 referencedTableName="users"
+                                 referencedColumnNames="id"/>
+    </changeSet>
+
+</databaseChangeLog>
