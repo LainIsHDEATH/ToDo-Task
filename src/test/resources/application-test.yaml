@@ -12,3 +12,7 @@ spring:
 
   liquibase:
     enabled: false
+
+security:
+  cors:
+    allowed-origins: http://localhost:3000,http://localhost:5173
