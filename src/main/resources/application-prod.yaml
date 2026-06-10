@@ -12,3 +12,7 @@ spring:
   liquibase:
     user: ${DB_USERNAME}
     password: ${DB_PASSWORD}
+
+security:
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS}
