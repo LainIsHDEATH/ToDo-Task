@@ -5,7 +5,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import ua.ivan.todo.tasks.common.dto.response.PageResponse;
 import ua.ivan.todo.tasks.common.exception.exceptions.ConflictException;
 import ua.ivan.todo.tasks.common.exception.exceptions.NotFoundException;
 import ua.ivan.todo.tasks.common.validation.DomainModelValidator;
@@ -139,6 +144,54 @@ class UserServiceTest {
         List<UserResponse> actual = userService.findAll();
 
         assertThat(actual).containsExactly(firstResponse, secondResponse);
+    }
+
+    @Test
+    void findAllShouldReturnPagedUsers() {
+        Pageable pageable = PageRequest.of(0, 20);
+
+        User firstUser = User.builder()
+                .id(1L)
+                .firstName("Nick")
+                .lastName("Green")
+                .email("nick@mail.com")
+                .passwordHash("hash")
+                .role(Role.USER)
+                .build();
+
+        User secondUser = User.builder()
+                .id(2L)
+                .firstName("Nora")
+                .lastName("White")
+                .email("nora@mail.com")
+                .passwordHash("hash")
+                .role(Role.ADMIN)
+                .build();
+
+        UserResponse firstResponse = new UserResponse(1L, "Nick", "Green", "nick@mail.com", Role.USER);
+        UserResponse secondResponse = new UserResponse(2L, "Nora", "White", "nora@mail.com", Role.ADMIN);
+
+        Page<User> usersPage = new PageImpl<>(
+                List.of(firstUser, secondUser),
+                pageable,
+                2
+        );
+
+        when(userRepository.findAll(pageable)).thenReturn(usersPage);
+        when(userMapper.toResponse(firstUser)).thenReturn(firstResponse);
+        when(userMapper.toResponse(secondUser)).thenReturn(secondResponse);
+
+        PageResponse<UserResponse> actual = userService.findAll(pageable);
+
+        assertThat(actual.content()).containsExactly(firstResponse, secondResponse);
+        assertThat(actual.page()).isZero();
+        assertThat(actual.size()).isEqualTo(20);
+        assertThat(actual.totalElements()).isEqualTo(2);
+        assertThat(actual.totalPages()).isEqualTo(1);
+        assertThat(actual.first()).isTrue();
+        assertThat(actual.last()).isTrue();
+
+        verify(userRepository).findAll(pageable);
     }
 
     @Test

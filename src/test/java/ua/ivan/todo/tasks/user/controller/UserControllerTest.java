@@ -4,13 +4,18 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
+import ua.ivan.todo.tasks.common.dto.response.PageResponse;
 import ua.ivan.todo.tasks.common.exception.exceptions.NotFoundException;
 import ua.ivan.todo.tasks.common.exception.handler.GlobalExceptionHandler;
 import ua.ivan.todo.tasks.user.dto.request.UserUpdateRequest;
@@ -20,6 +25,7 @@ import ua.ivan.todo.tasks.user.service.UserService;
 
 import java.util.List;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -42,26 +48,142 @@ class UserControllerTest {
         mockMvc = MockMvcBuilders
                 .standaloneSetup(userController)
                 .setControllerAdvice(new GlobalExceptionHandler())
+                .setCustomArgumentResolvers(new PageableHandlerMethodArgumentResolver())
                 .setValidator(validator())
                 .build();
     }
+
     @Test
-    void findAllShouldReturnUsers() throws Exception {
-        List<UserResponse> users = List.of(
-                new UserResponse(1L, "Nick", "Green", "nick@mail.com", Role.USER),
-                new UserResponse(2L, "Nora", "White", "nora@mail.com", Role.ADMIN)
+    void findAllShouldReturnDefaultPage() throws Exception {
+        PageResponse<UserResponse> response = new PageResponse<>(
+                List.of(new UserResponse(1L, "Nick", "Green", "nick@mail.com", Role.USER)),
+                0,
+                20,
+                1,
+                1,
+                true,
+                true
         );
 
-        when(userService.findAll()).thenReturn(users);
+        when(userService.findAll(any(Pageable.class))).thenReturn(response);
 
         mockMvc.perform(get("/api/users"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id").value(1))
-                .andExpect(jsonPath("$[0].email").value("nick@mail.com"))
-                .andExpect(jsonPath("$[0].passwordHash").doesNotExist())
-                .andExpect(jsonPath("$[1].id").value(2))
-                .andExpect(jsonPath("$[1].email").value("nora@mail.com"))
-                .andExpect(jsonPath("$[1].passwordHash").doesNotExist());
+                .andExpect(jsonPath("$.content[0].id").value(1))
+                .andExpect(jsonPath("$.content[0].email").value("nick@mail.com"))
+                .andExpect(jsonPath("$.content[0].passwordHash").doesNotExist())
+                .andExpect(jsonPath("$.page").value(0))
+                .andExpect(jsonPath("$.size").value(20))
+                .andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.totalPages").value(1))
+                .andExpect(jsonPath("$.first").value(true))
+                .andExpect(jsonPath("$.last").value(true));
+
+        ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
+
+        verify(userService).findAll(pageableCaptor.capture());
+
+        Pageable pageable = pageableCaptor.getValue();
+        Sort.Order order = pageable.getSort().getOrderFor("id");
+
+        assertThat(pageable.getPageNumber()).isZero();
+        assertThat(pageable.getPageSize()).isEqualTo(20);
+        assertThat(order).isNotNull();
+        assertThat(order.getDirection()).isEqualTo(Sort.Direction.ASC);
+    }
+
+    @Test
+    void findAllShouldUseCustomPageAndSize() throws Exception {
+        PageResponse<UserResponse> response = new PageResponse<>(
+                List.of(),
+                2,
+                5,
+                0,
+                0,
+                false,
+                true
+        );
+
+        when(userService.findAll(any(Pageable.class))).thenReturn(response);
+
+        mockMvc.perform(get("/api/users")
+                        .param("page", "2")
+                        .param("size", "5"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.page").value(2))
+                .andExpect(jsonPath("$.size").value(5));
+
+        ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
+
+        verify(userService).findAll(pageableCaptor.capture());
+
+        Pageable pageable = pageableCaptor.getValue();
+
+        assertThat(pageable.getPageNumber()).isEqualTo(2);
+        assertThat(pageable.getPageSize()).isEqualTo(5);
+    }
+
+    @Test
+    void findAllShouldUseValidSortField() throws Exception {
+        PageResponse<UserResponse> response = new PageResponse<>(
+                List.of(),
+                0,
+                20,
+                0,
+                0,
+                true,
+                true
+        );
+
+        when(userService.findAll(any(Pageable.class))).thenReturn(response);
+
+        mockMvc.perform(get("/api/users")
+                        .param("sort", "email,desc"))
+                .andExpect(status().isOk());
+
+        ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
+
+        verify(userService).findAll(pageableCaptor.capture());
+
+        Sort.Order order = pageableCaptor.getValue().getSort().getOrderFor("email");
+
+        assertThat(order).isNotNull();
+        assertThat(order.getDirection()).isEqualTo(Sort.Direction.DESC);
+    }
+
+    @Test
+    void findAllShouldReturnBadRequestWhenSortFieldIsInvalid() throws Exception {
+        mockMvc.perform(get("/api/users")
+                        .param("sort", "passwordHash,asc"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.error").value("Bad Request"))
+                .andExpect(jsonPath("$.message").value("Invalid sort field 'passwordHash'"))
+                .andExpect(jsonPath("$.path").value("/api/users"));
+
+        verify(userService, never()).findAll(any(Pageable.class));
+    }
+
+    @Test
+    void findAllShouldReturnEmptyPage() throws Exception {
+        PageResponse<UserResponse> response = new PageResponse<>(
+                List.of(),
+                0,
+                20,
+                0,
+                0,
+                true,
+                true
+        );
+
+        when(userService.findAll(any(Pageable.class))).thenReturn(response);
+
+        mockMvc.perform(get("/api/users"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content").isArray())
+                .andExpect(jsonPath("$.content").isEmpty())
+                .andExpect(jsonPath("$.totalElements").value(0))
+                .andExpect(jsonPath("$.totalPages").value(0));
     }
 
     @Test
