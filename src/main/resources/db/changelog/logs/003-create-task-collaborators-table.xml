@@ -32,7 +32,8 @@
                                  baseColumnNames="user_id"
                                  constraintName="fk_task_collaborators_user"
                                  referencedTableName="users"
-                                 referencedColumnNames="id"/>
+                                 referencedColumnNames="id"
+                                 onDelete="CASCADE"/>
     </changeSet>
 
 </databaseChangeLog>
