@@ -1,10 +1,12 @@
 package ua.ivan.todo.tasks.user.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
+import ua.ivan.todo.tasks.common.dto.response.PageResponse;
 import ua.ivan.todo.tasks.common.exception.exceptions.ConflictException;
 import ua.ivan.todo.tasks.common.exception.exceptions.NotFoundException;
 import ua.ivan.todo.tasks.common.validation.DomainModelValidator;
@@ -51,6 +53,14 @@ public class UserService {
                 .stream()
                 .map(userMapper::toResponse)
                 .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public PageResponse<UserResponse> findAll(Pageable pageable) {
+        return PageResponse.from(
+                userRepository.findAll(pageable)
+                        .map(userMapper::toResponse)
+        );
     }
 
     @Transactional(readOnly = true)
