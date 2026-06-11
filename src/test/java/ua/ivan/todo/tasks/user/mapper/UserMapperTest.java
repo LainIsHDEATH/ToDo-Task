@@ -20,13 +20,13 @@ class UserMapperTest {
     @Test
     void toResponseShouldMapEntityToUserResponseWithoutPasswordHash() {
         User user = User.builder()
-                .id(1L)
-                .firstName("Nick")
-                .lastName("Green")
-                .email("nick@mail.com")
-                .passwordHash("hashed-password")
-                .role(Role.USER)
-                .build();
+            .id(1L)
+            .firstName("Nick")
+            .lastName("Green")
+            .email("nick@mail.com")
+            .passwordHash("hashed-password")
+            .role(Role.USER)
+            .build();
 
         UserResponse response = userMapper.toResponse(user);
 
@@ -40,13 +40,13 @@ class UserMapperTest {
     @Test
     void toShortResponseShouldMapEntityToShortResponse() {
         User user = User.builder()
-                .id(2L)
-                .firstName("Nora")
-                .lastName("White")
-                .email("nora@mail.com")
-                .passwordHash("hashed-password")
-                .role(Role.ADMIN)
-                .build();
+            .id(2L)
+            .firstName("Nora")
+            .lastName("White")
+            .email("nora@mail.com")
+            .passwordHash("hashed-password")
+            .role(Role.ADMIN)
+            .build();
 
         UserShortResponse response = userMapper.toShortResponse(user);
 
@@ -59,11 +59,10 @@ class UserMapperTest {
     @Test
     void toEntityShouldMapRegistrationRequestWithoutPasswordHashAndRole() {
         UserRegistrationRequest request = new UserRegistrationRequest(
-                "Mike",
-                "Brown",
-                "mike@mail.com",
-                "password123"
-        );
+            "Mike",
+            "Brown",
+            "mike@mail.com",
+            "password123");
 
         User user = userMapper.toEntity(request);
 

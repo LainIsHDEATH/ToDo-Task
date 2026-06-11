@@ -22,20 +22,17 @@ import java.util.Set;
 public class TaskController {
 
     private static final Set<String> ALLOWED_SORT_FIELDS = Set.of(
-            "id",
-            "name",
-            "priority",
-            "status"
-    );
+        "id",
+        "name",
+        "priority",
+        "status");
 
     private final TaskService taskService;
 
     @GetMapping("/api/users/{userId}/tasks")
     public PageResponse<TaskListItemResponse> findAllByOwnerId(
-            @PathVariable Long userId,
-            @PageableDefault(size = 20, sort = "id", direction = Sort.Direction.ASC)
-            Pageable pageable
-    ) {
+        @PathVariable Long userId,
+        @PageableDefault(size = 20, sort = "id", direction = Sort.Direction.ASC) Pageable pageable) {
         SortValidator.validate(pageable.getSort(), ALLOWED_SORT_FIELDS);
 
         return taskService.findAllByOwnerId(userId, pageable);
@@ -44,9 +41,8 @@ public class TaskController {
     @PostMapping("/api/users/{userId}/tasks")
     @ResponseStatus(HttpStatus.CREATED)
     public TaskResponse create(
-            @PathVariable Long userId,
-            @Valid @RequestBody TaskCreateRequest request
-    ) {
+        @PathVariable Long userId,
+        @Valid @RequestBody TaskCreateRequest request) {
         return taskService.create(userId, request);
     }
 
@@ -57,9 +53,8 @@ public class TaskController {
 
     @PutMapping("/api/tasks/{taskId}")
     public TaskResponse update(
-            @PathVariable Long taskId,
-            @Valid @RequestBody TaskUpdateRequest request
-    ) {
+        @PathVariable Long taskId,
+        @Valid @RequestBody TaskUpdateRequest request) {
         return taskService.update(taskId, request);
     }
 

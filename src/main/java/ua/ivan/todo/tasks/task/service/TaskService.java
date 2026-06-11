@@ -45,9 +45,9 @@ public class TaskService {
         ensureUserExists(userId);
 
         return taskRepository.findAllByOwnerId(userId)
-                .stream()
-                .map(taskMapper::toListItemResponse)
-                .toList();
+            .stream()
+            .map(taskMapper::toListItemResponse)
+            .toList();
     }
 
     @Transactional(readOnly = true)
@@ -55,9 +55,8 @@ public class TaskService {
         ensureUserExists(userId);
 
         return PageResponse.from(
-                taskRepository.findAllByOwnerId(userId, pageable)
-                        .map(taskMapper::toListItemResponse)
-        );
+            taskRepository.findAllByOwnerId(userId, pageable)
+                .map(taskMapper::toListItemResponse));
     }
 
     @Transactional(readOnly = true)
@@ -106,12 +105,12 @@ public class TaskService {
 
     private Task getTaskOrThrow(Long taskId) {
         return taskRepository.findById(taskId)
-                .orElseThrow(() -> new NotFoundException(TASK_NOT_FOUND_MESSAGE.formatted(taskId)));
+            .orElseThrow(() -> new NotFoundException(TASK_NOT_FOUND_MESSAGE.formatted(taskId)));
     }
 
     private User getUserOrThrow(Long userId) {
         return userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException(USER_NOT_FOUND_MESSAGE.formatted(userId)));
+            .orElseThrow(() -> new NotFoundException(USER_NOT_FOUND_MESSAGE.formatted(userId)));
     }
 
     private void ensureUserExists(Long userId) {
@@ -135,12 +134,12 @@ public class TaskService {
 
         if (users.size() != normalizedCollaboratorIds.size()) {
             Set<Long> foundIds = users.stream()
-                    .map(User::getId)
-                    .collect(Collectors.toSet());
+                .map(User::getId)
+                .collect(Collectors.toSet());
 
             Set<Long> missingIds = normalizedCollaboratorIds.stream()
-                    .filter(id -> !foundIds.contains(id))
-                    .collect(Collectors.toCollection(HashSet::new));
+                .filter(id -> !foundIds.contains(id))
+                .collect(Collectors.toCollection(HashSet::new));
 
             throw new NotFoundException(COLLABORATORS_NOT_FOUND_MESSAGE.formatted(missingIds));
         }

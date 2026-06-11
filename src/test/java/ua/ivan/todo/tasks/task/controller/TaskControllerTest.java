@@ -55,46 +55,44 @@ class TaskControllerTest {
     @BeforeEach
     void setUp() {
         mockMvc = MockMvcBuilders
-                .standaloneSetup(taskController)
-                .setControllerAdvice(new GlobalExceptionHandler())
-                .setCustomArgumentResolvers(new PageableHandlerMethodArgumentResolver())
-                .setValidator(validator())
-                .build();
+            .standaloneSetup(taskController)
+            .setControllerAdvice(new GlobalExceptionHandler())
+            .setCustomArgumentResolvers(new PageableHandlerMethodArgumentResolver())
+            .setValidator(validator())
+            .build();
     }
 
     @Test
     void findAllByOwnerIdShouldReturnDefaultPage() throws Exception {
         PageResponse<TaskListItemResponse> response = new PageResponse<>(
-                List.of(
-                        new TaskListItemResponse(1L, "First task", TaskPriority.HIGH, TaskStatus.TODO),
-                        new TaskListItemResponse(2L, "Second task", TaskPriority.LOW, TaskStatus.DONE)
-                ),
-                0,
-                20,
-                2,
-                1,
-                true,
-                true
-        );
+            List.of(
+                new TaskListItemResponse(1L, "First task", TaskPriority.HIGH, TaskStatus.TODO),
+                new TaskListItemResponse(2L, "Second task", TaskPriority.LOW, TaskStatus.DONE)),
+            0,
+            20,
+            2,
+            1,
+            true,
+            true);
 
         when(taskService.findAllByOwnerId(eq(1L), any(Pageable.class))).thenReturn(response);
 
         mockMvc.perform(get("/api/users/{userId}/tasks", 1L))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content[0].id").value(1))
-                .andExpect(jsonPath("$.content[0].name").value("First task"))
-                .andExpect(jsonPath("$.content[0].priority").value("HIGH"))
-                .andExpect(jsonPath("$.content[0].status").value("TODO"))
-                .andExpect(jsonPath("$.content[1].id").value(2))
-                .andExpect(jsonPath("$.content[1].name").value("Second task"))
-                .andExpect(jsonPath("$.content[1].priority").value("LOW"))
-                .andExpect(jsonPath("$.content[1].status").value("DONE"))
-                .andExpect(jsonPath("$.page").value(0))
-                .andExpect(jsonPath("$.size").value(20))
-                .andExpect(jsonPath("$.totalElements").value(2))
-                .andExpect(jsonPath("$.totalPages").value(1))
-                .andExpect(jsonPath("$.first").value(true))
-                .andExpect(jsonPath("$.last").value(true));
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.content[0].id").value(1))
+            .andExpect(jsonPath("$.content[0].name").value("First task"))
+            .andExpect(jsonPath("$.content[0].priority").value("HIGH"))
+            .andExpect(jsonPath("$.content[0].status").value("TODO"))
+            .andExpect(jsonPath("$.content[1].id").value(2))
+            .andExpect(jsonPath("$.content[1].name").value("Second task"))
+            .andExpect(jsonPath("$.content[1].priority").value("LOW"))
+            .andExpect(jsonPath("$.content[1].status").value("DONE"))
+            .andExpect(jsonPath("$.page").value(0))
+            .andExpect(jsonPath("$.size").value(20))
+            .andExpect(jsonPath("$.totalElements").value(2))
+            .andExpect(jsonPath("$.totalPages").value(1))
+            .andExpect(jsonPath("$.first").value(true))
+            .andExpect(jsonPath("$.last").value(true));
 
         ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
 
@@ -125,23 +123,22 @@ class TaskControllerTest {
     @Test
     void findAllByOwnerIdShouldUseCustomPageAndSize() throws Exception {
         PageResponse<TaskListItemResponse> response = new PageResponse<>(
-                List.of(),
-                2,
-                3,
-                0,
-                0,
-                false,
-                true
-        );
+            List.of(),
+            2,
+            3,
+            0,
+            0,
+            false,
+            true);
 
         when(taskService.findAllByOwnerId(eq(1L), any(Pageable.class))).thenReturn(response);
 
         mockMvc.perform(get("/api/users/{userId}/tasks", 1L)
-                        .param("page", "2")
-                        .param("size", "3"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.page").value(2))
-                .andExpect(jsonPath("$.size").value(3));
+            .param("page", "2")
+            .param("size", "3"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.page").value(2))
+            .andExpect(jsonPath("$.size").value(3));
 
         ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
 
@@ -156,20 +153,19 @@ class TaskControllerTest {
     @Test
     void findAllByOwnerIdShouldUseValidSortField() throws Exception {
         PageResponse<TaskListItemResponse> response = new PageResponse<>(
-                List.of(),
-                0,
-                20,
-                0,
-                0,
-                true,
-                true
-        );
+            List.of(),
+            0,
+            20,
+            0,
+            0,
+            true,
+            true);
 
         when(taskService.findAllByOwnerId(eq(1L), any(Pageable.class))).thenReturn(response);
 
         mockMvc.perform(get("/api/users/{userId}/tasks", 1L)
-                        .param("sort", "priority,desc"))
-                .andExpect(status().isOk());
+            .param("sort", "priority,desc"))
+            .andExpect(status().isOk());
 
         ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
 
@@ -184,12 +180,12 @@ class TaskControllerTest {
     @Test
     void findAllByOwnerIdShouldReturnBadRequestWhenSortFieldIsInvalid() throws Exception {
         mockMvc.perform(get("/api/users/{userId}/tasks", 1L)
-                        .param("sort", "owner,asc"))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.status").value(400))
-                .andExpect(jsonPath("$.error").value("Bad Request"))
-                .andExpect(jsonPath("$.message").value("Invalid sort field 'owner'"))
-                .andExpect(jsonPath("$.path").value("/api/users/1/tasks"));
+            .param("sort", "owner,asc"))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.status").value(400))
+            .andExpect(jsonPath("$.error").value("Bad Request"))
+            .andExpect(jsonPath("$.message").value("Invalid sort field 'owner'"))
+            .andExpect(jsonPath("$.path").value("/api/users/1/tasks"));
 
         verify(taskService, never()).findAllByOwnerId(anyLong(), any(Pageable.class));
     }
@@ -197,46 +193,44 @@ class TaskControllerTest {
     @Test
     void findAllByOwnerIdShouldReturnEmptyPage() throws Exception {
         PageResponse<TaskListItemResponse> response = new PageResponse<>(
-                List.of(),
-                0,
-                20,
-                0,
-                0,
-                true,
-                true
-        );
+            List.of(),
+            0,
+            20,
+            0,
+            0,
+            true,
+            true);
 
         when(taskService.findAllByOwnerId(eq(1L), any(Pageable.class))).thenReturn(response);
 
         mockMvc.perform(get("/api/users/{userId}/tasks", 1L))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content").isArray())
-                .andExpect(jsonPath("$.content").isEmpty())
-                .andExpect(jsonPath("$.totalElements").value(0))
-                .andExpect(jsonPath("$.totalPages").value(0));
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.content").isArray())
+            .andExpect(jsonPath("$.content").isEmpty())
+            .andExpect(jsonPath("$.totalElements").value(0))
+            .andExpect(jsonPath("$.totalPages").value(0));
     }
 
     @Test
     void findByIdShouldReturnTask() throws Exception {
         TaskResponse response = new TaskResponse(
-                10L,
-                "Task",
-                TaskPriority.MEDIUM,
-                TaskStatus.TODO,
-                new UserShortResponse(1L, "Nick", "Green", "nick@mail.com"),
-                Set.of(new UserShortResponse(2L, "Nora", "White", "nora@mail.com"))
-        );
+            10L,
+            "Task",
+            TaskPriority.MEDIUM,
+            TaskStatus.TODO,
+            new UserShortResponse(1L, "Nick", "Green", "nick@mail.com"),
+            Set.of(new UserShortResponse(2L, "Nora", "White", "nora@mail.com")));
 
         when(taskService.findById(10L)).thenReturn(response);
 
         mockMvc.perform(get("/api/tasks/{taskId}", 10L))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(10))
-                .andExpect(jsonPath("$.name").value("Task"))
-                .andExpect(jsonPath("$.priority").value("MEDIUM"))
-                .andExpect(jsonPath("$.status").value("TODO"))
-                .andExpect(jsonPath("$.owner.id").value(1))
-                .andExpect(jsonPath("$.collaborators").isArray());
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.id").value(10))
+            .andExpect(jsonPath("$.name").value("Task"))
+            .andExpect(jsonPath("$.priority").value("MEDIUM"))
+            .andExpect(jsonPath("$.status").value("TODO"))
+            .andExpect(jsonPath("$.owner.id").value(1))
+            .andExpect(jsonPath("$.collaborators").isArray());
     }
 
     @Test
@@ -255,251 +249,242 @@ class TaskControllerTest {
     @Test
     void createShouldReturnCreatedTask() throws Exception {
         TaskCreateRequest request = new TaskCreateRequest(
-                "New task",
-                TaskPriority.HIGH,
-                Set.of(2L)
-        );
+            "New task",
+            TaskPriority.HIGH,
+            Set.of(2L));
 
         TaskResponse response = new TaskResponse(
-                10L,
-                "New task",
-                TaskPriority.HIGH,
-                TaskStatus.TODO,
-                new UserShortResponse(1L, "Nick", "Green", "nick@mail.com"),
-                Set.of(new UserShortResponse(2L, "Nora", "White", "nora@mail.com"))
-        );
+            10L,
+            "New task",
+            TaskPriority.HIGH,
+            TaskStatus.TODO,
+            new UserShortResponse(1L, "Nick", "Green", "nick@mail.com"),
+            Set.of(new UserShortResponse(2L, "Nora", "White", "nora@mail.com")));
 
         when(taskService.create(1L, request)).thenReturn(response);
 
         mockMvc.perform(post("/api/users/{userId}/tasks", 1L)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id").value(10))
-                .andExpect(jsonPath("$.name").value("New task"))
-                .andExpect(jsonPath("$.priority").value("HIGH"))
-                .andExpect(jsonPath("$.status").value("TODO"))
-                .andExpect(jsonPath("$.owner.id").value(1))
-                .andExpect(jsonPath("$.collaborators").isArray());
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(request)))
+            .andExpect(status().isCreated())
+            .andExpect(jsonPath("$.id").value(10))
+            .andExpect(jsonPath("$.name").value("New task"))
+            .andExpect(jsonPath("$.priority").value("HIGH"))
+            .andExpect(jsonPath("$.status").value("TODO"))
+            .andExpect(jsonPath("$.owner.id").value(1))
+            .andExpect(jsonPath("$.collaborators").isArray());
     }
 
     @Test
     void createShouldNormalizeDuplicateCollaboratorIdsInRequest() throws Exception {
         String body = """
-                {
-                  "name": "New task",
-                  "priority": "HIGH",
-                  "collaboratorIds": [2, 2, 2]
-                }
-                """;
+            {
+              "name": "New task",
+              "priority": "HIGH",
+              "collaboratorIds": [2, 2, 2]
+            }
+            """;
 
         TaskResponse response = new TaskResponse(
-                10L,
-                "New task",
-                TaskPriority.HIGH,
-                TaskStatus.TODO,
-                new UserShortResponse(1L, "Nick", "Green", "nick@mail.com"),
-                Set.of(new UserShortResponse(2L, "Nora", "White", "nora@mail.com"))
-        );
+            10L,
+            "New task",
+            TaskPriority.HIGH,
+            TaskStatus.TODO,
+            new UserShortResponse(1L, "Nick", "Green", "nick@mail.com"),
+            Set.of(new UserShortResponse(2L, "Nora", "White", "nora@mail.com")));
 
         when(taskService.create(eq(1L), any(TaskCreateRequest.class))).thenReturn(response);
 
         mockMvc.perform(post("/api/users/{userId}/tasks", 1L)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(body))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id").value(10))
-                .andExpect(jsonPath("$.name").value("New task"))
-                .andExpect(jsonPath("$.priority").value("HIGH"))
-                .andExpect(jsonPath("$.status").value("TODO"))
-                .andExpect(jsonPath("$.owner.id").value(1))
-                .andExpect(jsonPath("$.collaborators").isArray());
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(body))
+            .andExpect(status().isCreated())
+            .andExpect(jsonPath("$.id").value(10))
+            .andExpect(jsonPath("$.name").value("New task"))
+            .andExpect(jsonPath("$.priority").value("HIGH"))
+            .andExpect(jsonPath("$.status").value("TODO"))
+            .andExpect(jsonPath("$.owner.id").value(1))
+            .andExpect(jsonPath("$.collaborators").isArray());
 
         ArgumentCaptor<TaskCreateRequest> requestCaptor = ArgumentCaptor.forClass(TaskCreateRequest.class);
 
         verify(taskService).create(eq(1L), requestCaptor.capture());
 
         assertThat(requestCaptor.getValue().collaboratorIds())
-                .containsExactly(2L);
+            .containsExactly(2L);
     }
 
     @Test
     void createShouldReturnConflictWhenOwnerIsCollaborator() throws Exception {
         TaskCreateRequest request = new TaskCreateRequest(
-                "New task",
-                TaskPriority.HIGH,
-                Set.of(1L)
-        );
+            "New task",
+            TaskPriority.HIGH,
+            Set.of(1L));
 
         when(taskService.create(1L, request))
-                .thenThrow(new ConflictException("Task owner cannot be added as collaborator"));
+            .thenThrow(new ConflictException("Task owner cannot be added as collaborator"));
 
         mockMvc.perform(post("/api/users/{userId}/tasks", 1L)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.status").value(409))
-                .andExpect(jsonPath("$.error").value("Conflict"))
-                .andExpect(jsonPath("$.message").value("Task owner cannot be added as collaborator"))
-                .andExpect(jsonPath("$.path").value("/api/users/1/tasks"));
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(request)))
+            .andExpect(status().isConflict())
+            .andExpect(jsonPath("$.status").value(409))
+            .andExpect(jsonPath("$.error").value("Conflict"))
+            .andExpect(jsonPath("$.message").value("Task owner cannot be added as collaborator"))
+            .andExpect(jsonPath("$.path").value("/api/users/1/tasks"));
     }
 
     @Test
     void createShouldReturnBadRequestWhenRequestIsInvalid() throws Exception {
         String body = """
-                {
-                  "name": "",
-                  "priority": null
-                }
-                """;
+            {
+              "name": "",
+              "priority": null
+            }
+            """;
 
         mockMvc.perform(post("/api/users/{userId}/tasks", 1L)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(body))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.status").value(400))
-                .andExpect(jsonPath("$.error").value("Bad Request"))
-                .andExpect(jsonPath("$.message").value("Request validation failed"))
-                .andExpect(jsonPath("$.path").value("/api/users/1/tasks"))
-                .andExpect(jsonPath("$.fieldErrors").isArray());
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(body))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.status").value(400))
+            .andExpect(jsonPath("$.error").value("Bad Request"))
+            .andExpect(jsonPath("$.message").value("Request validation failed"))
+            .andExpect(jsonPath("$.path").value("/api/users/1/tasks"))
+            .andExpect(jsonPath("$.fieldErrors").isArray());
     }
 
     @Test
     void updateShouldReturnUpdatedTask() throws Exception {
         TaskUpdateRequest request = new TaskUpdateRequest(
-                "Updated task",
-                TaskPriority.LOW,
-                TaskStatus.DONE,
-                Set.of(2L)
-        );
+            "Updated task",
+            TaskPriority.LOW,
+            TaskStatus.DONE,
+            Set.of(2L));
 
         TaskResponse response = new TaskResponse(
-                10L,
-                "Updated task",
-                TaskPriority.LOW,
-                TaskStatus.DONE,
-                new UserShortResponse(1L, "Nick", "Green", "nick@mail.com"),
-                Set.of(new UserShortResponse(2L, "Nora", "White", "nora@mail.com"))
-        );
+            10L,
+            "Updated task",
+            TaskPriority.LOW,
+            TaskStatus.DONE,
+            new UserShortResponse(1L, "Nick", "Green", "nick@mail.com"),
+            Set.of(new UserShortResponse(2L, "Nora", "White", "nora@mail.com")));
 
         when(taskService.update(10L, request)).thenReturn(response);
 
         mockMvc.perform(put("/api/tasks/{taskId}", 10L)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(10))
-                .andExpect(jsonPath("$.name").value("Updated task"))
-                .andExpect(jsonPath("$.priority").value("LOW"))
-                .andExpect(jsonPath("$.status").value("DONE"))
-                .andExpect(jsonPath("$.owner.id").value(1))
-                .andExpect(jsonPath("$.collaborators").isArray());
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(request)))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.id").value(10))
+            .andExpect(jsonPath("$.name").value("Updated task"))
+            .andExpect(jsonPath("$.priority").value("LOW"))
+            .andExpect(jsonPath("$.status").value("DONE"))
+            .andExpect(jsonPath("$.owner.id").value(1))
+            .andExpect(jsonPath("$.collaborators").isArray());
     }
 
     @Test
     void updateShouldNormalizeDuplicateCollaboratorIdsInRequest() throws Exception {
         String body = """
-                {
-                  "name": "Updated task",
-                  "priority": "HIGH",
-                  "status": "IN_PROGRESS",
-                  "collaboratorIds": [2, 2, 2]
-                }
-                """;
+            {
+              "name": "Updated task",
+              "priority": "HIGH",
+              "status": "IN_PROGRESS",
+              "collaboratorIds": [2, 2, 2]
+            }
+            """;
 
         TaskResponse response = new TaskResponse(
-                10L,
-                "Updated task",
-                TaskPriority.HIGH,
-                TaskStatus.IN_PROGRESS,
-                new UserShortResponse(1L, "Nick", "Green", "nick@mail.com"),
-                Set.of(new UserShortResponse(2L, "Nora", "White", "nora@mail.com"))
-        );
+            10L,
+            "Updated task",
+            TaskPriority.HIGH,
+            TaskStatus.IN_PROGRESS,
+            new UserShortResponse(1L, "Nick", "Green", "nick@mail.com"),
+            Set.of(new UserShortResponse(2L, "Nora", "White", "nora@mail.com")));
 
         when(taskService.update(eq(10L), any(TaskUpdateRequest.class))).thenReturn(response);
 
         mockMvc.perform(put("/api/tasks/{taskId}", 10L)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(body))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(10))
-                .andExpect(jsonPath("$.name").value("Updated task"))
-                .andExpect(jsonPath("$.priority").value("HIGH"))
-                .andExpect(jsonPath("$.status").value("IN_PROGRESS"))
-                .andExpect(jsonPath("$.owner.id").value(1))
-                .andExpect(jsonPath("$.collaborators").isArray());
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(body))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.id").value(10))
+            .andExpect(jsonPath("$.name").value("Updated task"))
+            .andExpect(jsonPath("$.priority").value("HIGH"))
+            .andExpect(jsonPath("$.status").value("IN_PROGRESS"))
+            .andExpect(jsonPath("$.owner.id").value(1))
+            .andExpect(jsonPath("$.collaborators").isArray());
 
         ArgumentCaptor<TaskUpdateRequest> requestCaptor = ArgumentCaptor.forClass(TaskUpdateRequest.class);
 
         verify(taskService).update(eq(10L), requestCaptor.capture());
 
         assertThat(requestCaptor.getValue().collaboratorIds())
-                .containsExactly(2L);
+            .containsExactly(2L);
     }
 
     @Test
     void updateShouldReturnConflictWhenOwnerIsCollaborator() throws Exception {
         TaskUpdateRequest request = new TaskUpdateRequest(
-                "Updated task",
-                TaskPriority.HIGH,
-                TaskStatus.IN_PROGRESS,
-                Set.of(1L)
-        );
+            "Updated task",
+            TaskPriority.HIGH,
+            TaskStatus.IN_PROGRESS,
+            Set.of(1L));
 
         when(taskService.update(10L, request))
-                .thenThrow(new ConflictException("Task owner cannot be added as collaborator"));
+            .thenThrow(new ConflictException("Task owner cannot be added as collaborator"));
 
         mockMvc.perform(put("/api/tasks/{taskId}", 10L)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.status").value(409))
-                .andExpect(jsonPath("$.error").value("Conflict"))
-                .andExpect(jsonPath("$.message").value("Task owner cannot be added as collaborator"))
-                .andExpect(jsonPath("$.path").value("/api/tasks/10"));
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(request)))
+            .andExpect(status().isConflict())
+            .andExpect(jsonPath("$.status").value(409))
+            .andExpect(jsonPath("$.error").value("Conflict"))
+            .andExpect(jsonPath("$.message").value("Task owner cannot be added as collaborator"))
+            .andExpect(jsonPath("$.path").value("/api/tasks/10"));
     }
 
     @Test
     void updateShouldReturnBadRequestWhenRequestIsInvalid() throws Exception {
         String body = """
-                {
-                  "name": "",
-                  "priority": null,
-                  "status": null
-                }
-                """;
+            {
+              "name": "",
+              "priority": null,
+              "status": null
+            }
+            """;
 
         mockMvc.perform(put("/api/tasks/{taskId}", 10L)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(body))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.status").value(400))
-                .andExpect(jsonPath("$.error").value("Bad Request"))
-                .andExpect(jsonPath("$.message").value("Request validation failed"))
-                .andExpect(jsonPath("$.path").value("/api/tasks/10"))
-                .andExpect(jsonPath("$.fieldErrors").isArray());
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(body))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.status").value(400))
+            .andExpect(jsonPath("$.error").value("Bad Request"))
+            .andExpect(jsonPath("$.message").value("Request validation failed"))
+            .andExpect(jsonPath("$.path").value("/api/tasks/10"))
+            .andExpect(jsonPath("$.fieldErrors").isArray());
     }
 
     @Test
     void updateShouldReturnNotFoundWhenTaskDoesNotExist() throws Exception {
         TaskUpdateRequest request = new TaskUpdateRequest(
-                "Updated task",
-                TaskPriority.HIGH,
-                TaskStatus.IN_PROGRESS,
-                Set.of()
-        );
+            "Updated task",
+            TaskPriority.HIGH,
+            TaskStatus.IN_PROGRESS,
+            Set.of());
 
         when(taskService.update(99L, request))
-                .thenThrow(new NotFoundException("Task with id '99' was not found"));
+            .thenThrow(new NotFoundException("Task with id '99' was not found"));
 
         mockMvc.perform(put("/api/tasks/{taskId}", 99L)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.status").value(404))
-                .andExpect(jsonPath("$.error").value("Not Found"))
-                .andExpect(jsonPath("$.message").value("Task with id '99' was not found"))
-                .andExpect(jsonPath("$.path").value("/api/tasks/99"));
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(request)))
+            .andExpect(status().isNotFound())
+            .andExpect(jsonPath("$.status").value(404))
+            .andExpect(jsonPath("$.error").value("Not Found"))
+            .andExpect(jsonPath("$.message").value("Task with id '99' was not found"))
+            .andExpect(jsonPath("$.path").value("/api/tasks/99"));
     }
 
     @Test
@@ -507,7 +492,7 @@ class TaskControllerTest {
         doNothing().when(taskService).deleteById(10L);
 
         mockMvc.perform(delete("/api/tasks/{taskId}", 10L))
-                .andExpect(status().isNoContent());
+            .andExpect(status().isNoContent());
 
         verify(taskService).deleteById(10L);
     }
@@ -515,14 +500,14 @@ class TaskControllerTest {
     @Test
     void deleteByIdShouldReturnNotFoundWhenTaskDoesNotExist() throws Exception {
         doThrow(new NotFoundException("Task with id '99' was not found"))
-                .when(taskService).deleteById(99L);
+            .when(taskService).deleteById(99L);
 
         mockMvc.perform(delete("/api/tasks/{taskId}", 99L))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.status").value(404))
-                .andExpect(jsonPath("$.error").value("Not Found"))
-                .andExpect(jsonPath("$.message").value("Task with id '99' was not found"))
-                .andExpect(jsonPath("$.path").value("/api/tasks/99"));
+            .andExpect(status().isNotFound())
+            .andExpect(jsonPath("$.status").value(404))
+            .andExpect(jsonPath("$.error").value("Not Found"))
+            .andExpect(jsonPath("$.message").value("Task with id '99' was not found"))
+            .andExpect(jsonPath("$.path").value("/api/tasks/99"));
     }
 
     private static LocalValidatorFactoryBean validator() {

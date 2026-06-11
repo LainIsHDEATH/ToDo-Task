@@ -20,11 +20,10 @@ import java.util.Set;
 @ToString(exclude = {"owner", "collaborators"})
 @Entity
 @Table(
-        name = "tasks",
-        indexes = {
-                @Index(name = "idx_tasks_owner_user_id", columnList = "owner_user_id")
-        }
-)
+    name = "tasks",
+    indexes = {
+        @Index(name = "idx_tasks_owner_user_id", columnList = "owner_user_id")
+    })
 public class Task {
 
     @Id
@@ -49,33 +48,28 @@ public class Task {
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(
-            name = "owner_user_id",
-            nullable = false,
-            foreignKey = @ForeignKey(name = "fk_tasks_owner_user")
-    )
+        name = "owner_user_id",
+        nullable = false,
+        foreignKey = @ForeignKey(name = "fk_tasks_owner_user"))
     private User owner;
 
     @Builder.Default
     @ManyToMany
     @JoinTable(
-            name = "task_collaborators",
-            joinColumns = @JoinColumn(
-                    name = "task_id",
-                    nullable = false,
-                    foreignKey = @ForeignKey(name = "fk_task_collaborators_task")
-            ),
-            inverseJoinColumns = @JoinColumn(
-                    name = "user_id",
-                    nullable = false,
-                    foreignKey = @ForeignKey(name = "fk_task_collaborators_user")
-            ),
-            uniqueConstraints = {
-                    @UniqueConstraint(
-                            name = "pk_task_collaborators",
-                            columnNames = {"task_id", "user_id"}
-                    )
-            }
-    )
+        name = "task_collaborators",
+        joinColumns = @JoinColumn(
+            name = "task_id",
+            nullable = false,
+            foreignKey = @ForeignKey(name = "fk_task_collaborators_task")),
+        inverseJoinColumns = @JoinColumn(
+            name = "user_id",
+            nullable = false,
+            foreignKey = @ForeignKey(name = "fk_task_collaborators_user")),
+        uniqueConstraints = {
+            @UniqueConstraint(
+                name = "pk_task_collaborators",
+                columnNames = {"task_id", "user_id"})
+        })
     private Set<User> collaborators = new HashSet<>();
 
     public void addCollaborator(User user) {
@@ -88,17 +82,26 @@ public class Task {
 
     @Override
     public final boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null) return false;
-        Class<?> oEffectiveClass = o instanceof HibernateProxy ? ((HibernateProxy) o).getHibernateLazyInitializer().getPersistentClass() : o.getClass();
-        Class<?> thisEffectiveClass = this instanceof HibernateProxy ? ((HibernateProxy) this).getHibernateLazyInitializer().getPersistentClass() : this.getClass();
-        if (thisEffectiveClass != oEffectiveClass) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null) {
+            return false;
+        }
+        Class<?> effectiveClass = o instanceof HibernateProxy ? ((HibernateProxy) o)
+            .getHibernateLazyInitializer().getPersistentClass() : o.getClass();
+        Class<?> thisEffectiveClass = this instanceof HibernateProxy ? ((HibernateProxy) this)
+            .getHibernateLazyInitializer().getPersistentClass() : this.getClass();
+        if (thisEffectiveClass != effectiveClass) {
+            return false;
+        }
         Task task = (Task) o;
         return getId() != null && Objects.equals(getId(), task.getId());
     }
 
     @Override
     public final int hashCode() {
-        return this instanceof HibernateProxy ? ((HibernateProxy) this).getHibernateLazyInitializer().getPersistentClass().hashCode() : getClass().hashCode();
+        return this instanceof HibernateProxy ? ((HibernateProxy) this)
+            .getHibernateLazyInitializer().getPersistentClass().hashCode() : getClass().hashCode();
     }
 }

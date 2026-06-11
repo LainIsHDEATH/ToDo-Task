@@ -10,9 +10,8 @@ import ua.ivan.todo.tasks.task.model.Task;
 import ua.ivan.todo.tasks.user.mapper.UserMapper;
 
 @Mapper(
-        config = MapStructConfig.class,
-        uses = UserMapper.class
-)
+    config = MapStructConfig.class,
+    uses = UserMapper.class)
 public interface TaskMapper {
 
     TaskResponse toResponse(Task task);

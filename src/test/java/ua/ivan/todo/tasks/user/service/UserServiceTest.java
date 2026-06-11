@@ -48,34 +48,32 @@ class UserServiceTest {
     @Test
     void registerShouldCreateUserWithEncodedPasswordAndDefaultRole() {
         UserRegistrationRequest request = new UserRegistrationRequest(
-                "Nick",
-                "Green",
-                "nick@mail.com",
-                "password123"
-        );
+            "Nick",
+            "Green",
+            "nick@mail.com",
+            "password123");
 
         User user = User.builder()
-                .firstName("Nick")
-                .lastName("Green")
-                .email("nick@mail.com")
-                .build();
+            .firstName("Nick")
+            .lastName("Green")
+            .email("nick@mail.com")
+            .build();
 
         User savedUser = User.builder()
-                .id(1L)
-                .firstName("Nick")
-                .lastName("Green")
-                .email("nick@mail.com")
-                .passwordHash("encoded-password")
-                .role(Role.USER)
-                .build();
+            .id(1L)
+            .firstName("Nick")
+            .lastName("Green")
+            .email("nick@mail.com")
+            .passwordHash("encoded-password")
+            .role(Role.USER)
+            .build();
 
         UserResponse response = new UserResponse(
-                1L,
-                "Nick",
-                "Green",
-                "nick@mail.com",
-                Role.USER
-        );
+            1L,
+            "Nick",
+            "Green",
+            "nick@mail.com",
+            Role.USER);
 
         when(userRepository.existsByEmail("nick@mail.com")).thenReturn(false);
         when(userMapper.toEntity(request)).thenReturn(user);
@@ -98,17 +96,16 @@ class UserServiceTest {
     @Test
     void registerShouldThrowConflictExceptionWhenEmailAlreadyExists() {
         UserRegistrationRequest request = new UserRegistrationRequest(
-                "Nick",
-                "Green",
-                "nick@mail.com",
-                "password123"
-        );
+            "Nick",
+            "Green",
+            "nick@mail.com",
+            "password123");
 
         when(userRepository.existsByEmail("nick@mail.com")).thenReturn(true);
 
         assertThatThrownBy(() -> userService.register(request))
-                .isInstanceOf(ConflictException.class)
-                .hasMessage("User with email 'nick@mail.com' already exists");
+            .isInstanceOf(ConflictException.class)
+            .hasMessage("User with email 'nick@mail.com' already exists");
 
         verify(userRepository, never()).save(any());
         verify(passwordEncoder, never()).encode(any());
@@ -117,22 +114,22 @@ class UserServiceTest {
     @Test
     void findAllShouldReturnAllUsers() {
         User firstUser = User.builder()
-                .id(1L)
-                .firstName("Nick")
-                .lastName("Green")
-                .email("nick@mail.com")
-                .passwordHash("hash")
-                .role(Role.USER)
-                .build();
+            .id(1L)
+            .firstName("Nick")
+            .lastName("Green")
+            .email("nick@mail.com")
+            .passwordHash("hash")
+            .role(Role.USER)
+            .build();
 
         User secondUser = User.builder()
-                .id(2L)
-                .firstName("Nora")
-                .lastName("White")
-                .email("nora@mail.com")
-                .passwordHash("hash")
-                .role(Role.ADMIN)
-                .build();
+            .id(2L)
+            .firstName("Nora")
+            .lastName("White")
+            .email("nora@mail.com")
+            .passwordHash("hash")
+            .role(Role.ADMIN)
+            .build();
 
         UserResponse firstResponse = new UserResponse(1L, "Nick", "Green", "nick@mail.com", Role.USER);
         UserResponse secondResponse = new UserResponse(2L, "Nora", "White", "nora@mail.com", Role.ADMIN);
@@ -151,31 +148,30 @@ class UserServiceTest {
         Pageable pageable = PageRequest.of(0, 20);
 
         User firstUser = User.builder()
-                .id(1L)
-                .firstName("Nick")
-                .lastName("Green")
-                .email("nick@mail.com")
-                .passwordHash("hash")
-                .role(Role.USER)
-                .build();
+            .id(1L)
+            .firstName("Nick")
+            .lastName("Green")
+            .email("nick@mail.com")
+            .passwordHash("hash")
+            .role(Role.USER)
+            .build();
 
         User secondUser = User.builder()
-                .id(2L)
-                .firstName("Nora")
-                .lastName("White")
-                .email("nora@mail.com")
-                .passwordHash("hash")
-                .role(Role.ADMIN)
-                .build();
+            .id(2L)
+            .firstName("Nora")
+            .lastName("White")
+            .email("nora@mail.com")
+            .passwordHash("hash")
+            .role(Role.ADMIN)
+            .build();
 
         UserResponse firstResponse = new UserResponse(1L, "Nick", "Green", "nick@mail.com", Role.USER);
         UserResponse secondResponse = new UserResponse(2L, "Nora", "White", "nora@mail.com", Role.ADMIN);
 
         Page<User> usersPage = new PageImpl<>(
-                List.of(firstUser, secondUser),
-                pageable,
-                2
-        );
+            List.of(firstUser, secondUser),
+            pageable,
+            2);
 
         when(userRepository.findAll(pageable)).thenReturn(usersPage);
         when(userMapper.toResponse(firstUser)).thenReturn(firstResponse);
@@ -197,13 +193,13 @@ class UserServiceTest {
     @Test
     void findByIdShouldReturnUserWhenUserExists() {
         User user = User.builder()
-                .id(1L)
-                .firstName("Nick")
-                .lastName("Green")
-                .email("nick@mail.com")
-                .passwordHash("hash")
-                .role(Role.USER)
-                .build();
+            .id(1L)
+            .firstName("Nick")
+            .lastName("Green")
+            .email("nick@mail.com")
+            .passwordHash("hash")
+            .role(Role.USER)
+            .build();
 
         UserResponse response = new UserResponse(1L, "Nick", "Green", "nick@mail.com", Role.USER);
 
@@ -227,28 +223,26 @@ class UserServiceTest {
     @Test
     void updateShouldUpdateExistingUser() {
         User user = User.builder()
-                .id(1L)
-                .firstName("Old")
-                .lastName("Name")
-                .email("old@mail.com")
-                .passwordHash("hash")
-                .role(Role.USER)
-                .build();
+            .id(1L)
+            .firstName("Old")
+            .lastName("Name")
+            .email("old@mail.com")
+            .passwordHash("hash")
+            .role(Role.USER)
+            .build();
 
         UserUpdateRequest request = new UserUpdateRequest(
-                "New",
-                "User",
-                "new@mail.com",
-                Role.ADMIN
-        );
+            "New",
+            "User",
+            "new@mail.com",
+            Role.ADMIN);
 
         UserResponse response = new UserResponse(
-                1L,
-                "New",
-                "User",
-                "new@mail.com",
-                Role.ADMIN
-        );
+            1L,
+            "New",
+            "User",
+            "new@mail.com",
+            Role.ADMIN);
 
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(userRepository.findByEmail("new@mail.com")).thenReturn(Optional.empty());
@@ -270,28 +264,26 @@ class UserServiceTest {
     @Test
     void updateShouldAllowKeepingSameEmail() {
         User user = User.builder()
-                .id(1L)
-                .firstName("Nick")
-                .lastName("Green")
-                .email("nick@mail.com")
-                .passwordHash("hash")
-                .role(Role.USER)
-                .build();
+            .id(1L)
+            .firstName("Nick")
+            .lastName("Green")
+            .email("nick@mail.com")
+            .passwordHash("hash")
+            .role(Role.USER)
+            .build();
 
         UserUpdateRequest request = new UserUpdateRequest(
-                "Nick",
-                "Green",
-                "nick@mail.com",
-                Role.USER
-        );
+            "Nick",
+            "Green",
+            "nick@mail.com",
+            Role.USER);
 
         UserResponse response = new UserResponse(
-                1L,
-                "Nick",
-                "Green",
-                "nick@mail.com",
-                Role.USER
-        );
+            1L,
+            "Nick",
+            "Green",
+            "nick@mail.com",
+            Role.USER);
 
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(userRepository.findByEmail("nick@mail.com")).thenReturn(Optional.of(user));
@@ -307,52 +299,50 @@ class UserServiceTest {
     @Test
     void updateShouldThrowConflictExceptionWhenEmailBelongsToAnotherUser() {
         User currentUser = User.builder()
-                .id(1L)
-                .firstName("Nick")
-                .lastName("Green")
-                .email("nick@mail.com")
-                .passwordHash("hash")
-                .role(Role.USER)
-                .build();
+            .id(1L)
+            .firstName("Nick")
+            .lastName("Green")
+            .email("nick@mail.com")
+            .passwordHash("hash")
+            .role(Role.USER)
+            .build();
 
         User anotherUser = User.builder()
-                .id(2L)
-                .firstName("Nora")
-                .lastName("White")
-                .email("nora@mail.com")
-                .passwordHash("hash")
-                .role(Role.USER)
-                .build();
+            .id(2L)
+            .firstName("Nora")
+            .lastName("White")
+            .email("nora@mail.com")
+            .passwordHash("hash")
+            .role(Role.USER)
+            .build();
 
         UserUpdateRequest request = new UserUpdateRequest(
-                "Nick",
-                "Green",
-                "nora@mail.com",
-                Role.USER
-        );
+            "Nick",
+            "Green",
+            "nora@mail.com",
+            Role.USER);
 
         when(userRepository.findById(1L)).thenReturn(Optional.of(currentUser));
         when(userRepository.findByEmail("nora@mail.com")).thenReturn(Optional.of(anotherUser));
 
         assertThatThrownBy(() -> userService.update(1L, request))
-                .isInstanceOf(ConflictException.class)
-                .hasMessage("User with email 'nora@mail.com' already exists");
+            .isInstanceOf(ConflictException.class)
+            .hasMessage("User with email 'nora@mail.com' already exists");
     }
 
     @Test
     void updateShouldThrowNotFoundExceptionWhenUserDoesNotExist() {
         UserUpdateRequest request = new UserUpdateRequest(
-                "Nick",
-                "Green",
-                "nick@mail.com",
-                Role.USER
-        );
+            "Nick",
+            "Green",
+            "nick@mail.com",
+            Role.USER);
 
         when(userRepository.findById(99L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> userService.update(99L, request))
-                .isInstanceOf(NotFoundException.class)
-                .hasMessage("User with id '99' was not found");
+            .isInstanceOf(NotFoundException.class)
+            .hasMessage("User with id '99' was not found");
     }
 
     @Test

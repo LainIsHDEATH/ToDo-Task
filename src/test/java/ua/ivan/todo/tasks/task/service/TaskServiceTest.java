@@ -56,32 +56,30 @@ class TaskServiceTest {
     @Test
     void findAllByOwnerIdShouldReturnUserTasks() {
         Task firstTask = Task.builder()
-                .id(1L)
-                .name("First task")
-                .priority(TaskPriority.HIGH)
-                .status(TaskStatus.TODO)
-                .build();
+            .id(1L)
+            .name("First task")
+            .priority(TaskPriority.HIGH)
+            .status(TaskStatus.TODO)
+            .build();
 
         Task secondTask = Task.builder()
-                .id(2L)
-                .name("Second task")
-                .priority(TaskPriority.LOW)
-                .status(TaskStatus.DONE)
-                .build();
+            .id(2L)
+            .name("Second task")
+            .priority(TaskPriority.LOW)
+            .status(TaskStatus.DONE)
+            .build();
 
         TaskListItemResponse firstResponse = new TaskListItemResponse(
-                1L,
-                "First task",
-                TaskPriority.HIGH,
-                TaskStatus.TODO
-        );
+            1L,
+            "First task",
+            TaskPriority.HIGH,
+            TaskStatus.TODO);
 
         TaskListItemResponse secondResponse = new TaskListItemResponse(
-                2L,
-                "Second task",
-                TaskPriority.LOW,
-                TaskStatus.DONE
-        );
+            2L,
+            "Second task",
+            TaskPriority.LOW,
+            TaskStatus.DONE);
 
         when(userRepository.existsById(1L)).thenReturn(true);
         when(taskRepository.findAllByOwnerId(1L)).thenReturn(List.of(firstTask, secondTask));
@@ -98,38 +96,35 @@ class TaskServiceTest {
         Pageable pageable = PageRequest.of(0, 20);
 
         Task firstTask = Task.builder()
-                .id(1L)
-                .name("First task")
-                .priority(TaskPriority.HIGH)
-                .status(TaskStatus.TODO)
-                .build();
+            .id(1L)
+            .name("First task")
+            .priority(TaskPriority.HIGH)
+            .status(TaskStatus.TODO)
+            .build();
 
         Task secondTask = Task.builder()
-                .id(2L)
-                .name("Second task")
-                .priority(TaskPriority.LOW)
-                .status(TaskStatus.DONE)
-                .build();
+            .id(2L)
+            .name("Second task")
+            .priority(TaskPriority.LOW)
+            .status(TaskStatus.DONE)
+            .build();
 
         TaskListItemResponse firstResponse = new TaskListItemResponse(
-                1L,
-                "First task",
-                TaskPriority.HIGH,
-                TaskStatus.TODO
-        );
+            1L,
+            "First task",
+            TaskPriority.HIGH,
+            TaskStatus.TODO);
 
         TaskListItemResponse secondResponse = new TaskListItemResponse(
-                2L,
-                "Second task",
-                TaskPriority.LOW,
-                TaskStatus.DONE
-        );
+            2L,
+            "Second task",
+            TaskPriority.LOW,
+            TaskStatus.DONE);
 
         Page<Task> tasksPage = new PageImpl<>(
-                List.of(firstTask, secondTask),
-                pageable,
-                2
-        );
+            List.of(firstTask, secondTask),
+            pageable,
+            2);
 
         when(userRepository.existsById(1L)).thenReturn(true);
         when(taskRepository.findAllByOwnerId(1L, pageable)).thenReturn(tasksPage);
@@ -167,8 +162,8 @@ class TaskServiceTest {
         when(userRepository.existsById(99L)).thenReturn(false);
 
         assertThatThrownBy(() -> taskService.findAllByOwnerId(99L, pageable))
-                .isInstanceOf(NotFoundException.class)
-                .hasMessage("User with id '99' was not found");
+            .isInstanceOf(NotFoundException.class)
+            .hasMessage("User with id '99' was not found");
 
         verify(taskRepository, never()).findAllByOwnerId(anyLong(), any(Pageable.class));
     }
@@ -176,30 +171,29 @@ class TaskServiceTest {
     @Test
     void findByIdShouldReturnTask() {
         User owner = User.builder()
-                .id(1L)
-                .firstName("Nick")
-                .lastName("Green")
-                .email("nick@mail.com")
-                .passwordHash("hash")
-                .role(Role.USER)
-                .build();
+            .id(1L)
+            .firstName("Nick")
+            .lastName("Green")
+            .email("nick@mail.com")
+            .passwordHash("hash")
+            .role(Role.USER)
+            .build();
 
         Task task = Task.builder()
-                .id(10L)
-                .name("Task")
-                .priority(TaskPriority.MEDIUM)
-                .status(TaskStatus.TODO)
-                .owner(owner)
-                .build();
+            .id(10L)
+            .name("Task")
+            .priority(TaskPriority.MEDIUM)
+            .status(TaskStatus.TODO)
+            .owner(owner)
+            .build();
 
         TaskResponse response = new TaskResponse(
-                10L,
-                "Task",
-                TaskPriority.MEDIUM,
-                TaskStatus.TODO,
-                new UserShortResponse(1L, "Nick", "Green", "nick@mail.com"),
-                Set.of()
-        );
+            10L,
+            "Task",
+            TaskPriority.MEDIUM,
+            TaskStatus.TODO,
+            new UserShortResponse(1L, "Nick", "Green", "nick@mail.com"),
+            Set.of());
 
         when(taskRepository.findById(10L)).thenReturn(Optional.of(task));
         when(taskMapper.toResponse(task)).thenReturn(response);
@@ -221,51 +215,49 @@ class TaskServiceTest {
     @Test
     void createShouldCreateTaskWithOwnerDefaultStatusAndCollaborators() {
         User owner = User.builder()
-                .id(1L)
-                .firstName("Owner")
-                .lastName("User")
-                .email("owner@mail.com")
-                .passwordHash("hash")
-                .role(Role.USER)
-                .build();
+            .id(1L)
+            .firstName("Owner")
+            .lastName("User")
+            .email("owner@mail.com")
+            .passwordHash("hash")
+            .role(Role.USER)
+            .build();
 
         User collaborator = User.builder()
-                .id(2L)
-                .firstName("Collaborator")
-                .lastName("User")
-                .email("collaborator@mail.com")
-                .passwordHash("hash")
-                .role(Role.USER)
-                .build();
+            .id(2L)
+            .firstName("Collaborator")
+            .lastName("User")
+            .email("collaborator@mail.com")
+            .passwordHash("hash")
+            .role(Role.USER)
+            .build();
 
         TaskCreateRequest request = new TaskCreateRequest(
-                "New task",
-                TaskPriority.HIGH,
-                Set.of(2L)
-        );
+            "New task",
+            TaskPriority.HIGH,
+            Set.of(2L));
 
         Task task = Task.builder()
-                .name("New task")
-                .priority(TaskPriority.HIGH)
-                .build();
+            .name("New task")
+            .priority(TaskPriority.HIGH)
+            .build();
 
         Task savedTask = Task.builder()
-                .id(10L)
-                .name("New task")
-                .priority(TaskPriority.HIGH)
-                .status(TaskStatus.TODO)
-                .owner(owner)
-                .collaborators(Set.of(collaborator))
-                .build();
+            .id(10L)
+            .name("New task")
+            .priority(TaskPriority.HIGH)
+            .status(TaskStatus.TODO)
+            .owner(owner)
+            .collaborators(Set.of(collaborator))
+            .build();
 
         TaskResponse response = new TaskResponse(
-                10L,
-                "New task",
-                TaskPriority.HIGH,
-                TaskStatus.TODO,
-                new UserShortResponse(1L, "Owner", "User", "owner@mail.com"),
-                Set.of(new UserShortResponse(2L, "Collaborator", "User", "collaborator@mail.com"))
-        );
+            10L,
+            "New task",
+            TaskPriority.HIGH,
+            TaskStatus.TODO,
+            new UserShortResponse(1L, "Owner", "User", "owner@mail.com"),
+            Set.of(new UserShortResponse(2L, "Collaborator", "User", "collaborator@mail.com")));
 
         when(userRepository.findById(1L)).thenReturn(Optional.of(owner));
         when(userRepository.findAllById(Set.of(2L))).thenReturn(List.of(collaborator));
@@ -287,16 +279,15 @@ class TaskServiceTest {
     @Test
     void createShouldThrowNotFoundExceptionWhenOwnerDoesNotExist() {
         TaskCreateRequest request = new TaskCreateRequest(
-                "New task",
-                TaskPriority.HIGH,
-                Set.of()
-        );
+            "New task",
+            TaskPriority.HIGH,
+            Set.of());
 
         when(userRepository.findById(99L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> taskService.create(99L, request))
-                .isInstanceOf(NotFoundException.class)
-                .hasMessage("User with id '99' was not found");
+            .isInstanceOf(NotFoundException.class)
+            .hasMessage("User with id '99' was not found");
 
         verify(taskRepository, never()).save(any());
     }
@@ -304,32 +295,31 @@ class TaskServiceTest {
     @Test
     void createShouldThrowNotFoundExceptionWhenCollaboratorDoesNotExist() {
         User owner = User.builder()
-                .id(1L)
-                .firstName("Owner")
-                .lastName("User")
-                .email("owner@mail.com")
-                .passwordHash("hash")
-                .role(Role.USER)
-                .build();
+            .id(1L)
+            .firstName("Owner")
+            .lastName("User")
+            .email("owner@mail.com")
+            .passwordHash("hash")
+            .role(Role.USER)
+            .build();
 
         TaskCreateRequest request = new TaskCreateRequest(
-                "New task",
-                TaskPriority.HIGH,
-                Set.of(2L)
-        );
+            "New task",
+            TaskPriority.HIGH,
+            Set.of(2L));
 
         Task task = Task.builder()
-                .name("New task")
-                .priority(TaskPriority.HIGH)
-                .build();
+            .name("New task")
+            .priority(TaskPriority.HIGH)
+            .build();
 
         when(userRepository.findById(1L)).thenReturn(Optional.of(owner));
         when(taskMapper.toEntity(request)).thenReturn(task);
         when(userRepository.findAllById(Set.of(2L))).thenReturn(List.of());
 
         assertThatThrownBy(() -> taskService.create(1L, request))
-                .isInstanceOf(NotFoundException.class)
-                .hasMessage("Users with ids [2] were not found");
+            .isInstanceOf(NotFoundException.class)
+            .hasMessage("Users with ids [2] were not found");
 
         verify(taskRepository, never()).save(any());
     }
@@ -337,31 +327,30 @@ class TaskServiceTest {
     @Test
     void createShouldThrowConflictExceptionWhenOwnerIsCollaborator() {
         User owner = User.builder()
-                .id(1L)
-                .firstName("Owner")
-                .lastName("User")
-                .email("owner@mail.com")
-                .passwordHash("hash")
-                .role(Role.USER)
-                .build();
+            .id(1L)
+            .firstName("Owner")
+            .lastName("User")
+            .email("owner@mail.com")
+            .passwordHash("hash")
+            .role(Role.USER)
+            .build();
 
         TaskCreateRequest request = new TaskCreateRequest(
-                "New task",
-                TaskPriority.HIGH,
-                Set.of(1L)
-        );
+            "New task",
+            TaskPriority.HIGH,
+            Set.of(1L));
 
         Task task = Task.builder()
-                .name("New task")
-                .priority(TaskPriority.HIGH)
-                .build();
+            .name("New task")
+            .priority(TaskPriority.HIGH)
+            .build();
 
         when(userRepository.findById(1L)).thenReturn(Optional.of(owner));
         when(taskMapper.toEntity(request)).thenReturn(task);
 
         assertThatThrownBy(() -> taskService.create(1L, request))
-                .isInstanceOf(ConflictException.class)
-                .hasMessage("Task owner cannot be added as collaborator");
+            .isInstanceOf(ConflictException.class)
+            .hasMessage("Task owner cannot be added as collaborator");
 
         verify(userRepository, never()).findAllById(any());
         verify(taskRepository, never()).save(any());
@@ -370,46 +359,44 @@ class TaskServiceTest {
     @Test
     void updateShouldUpdateTask() {
         User owner = User.builder()
-                .id(1L)
-                .firstName("Owner")
-                .lastName("User")
-                .email("owner@mail.com")
-                .passwordHash("hash")
-                .role(Role.USER)
-                .build();
+            .id(1L)
+            .firstName("Owner")
+            .lastName("User")
+            .email("owner@mail.com")
+            .passwordHash("hash")
+            .role(Role.USER)
+            .build();
 
         User collaborator = User.builder()
-                .id(2L)
-                .firstName("Collaborator")
-                .lastName("User")
-                .email("collaborator@mail.com")
-                .passwordHash("hash")
-                .role(Role.USER)
-                .build();
+            .id(2L)
+            .firstName("Collaborator")
+            .lastName("User")
+            .email("collaborator@mail.com")
+            .passwordHash("hash")
+            .role(Role.USER)
+            .build();
 
         Task task = Task.builder()
-                .id(10L)
-                .name("Old task")
-                .priority(TaskPriority.LOW)
-                .status(TaskStatus.TODO)
-                .owner(owner)
-                .build();
+            .id(10L)
+            .name("Old task")
+            .priority(TaskPriority.LOW)
+            .status(TaskStatus.TODO)
+            .owner(owner)
+            .build();
 
         TaskUpdateRequest request = new TaskUpdateRequest(
-                "Updated task",
-                TaskPriority.HIGH,
-                TaskStatus.IN_PROGRESS,
-                Set.of(2L)
-        );
+            "Updated task",
+            TaskPriority.HIGH,
+            TaskStatus.IN_PROGRESS,
+            Set.of(2L));
 
         TaskResponse response = new TaskResponse(
-                10L,
-                "Updated task",
-                TaskPriority.HIGH,
-                TaskStatus.IN_PROGRESS,
-                new UserShortResponse(1L, "Owner", "User", "owner@mail.com"),
-                Set.of(new UserShortResponse(2L, "Collaborator", "User", "collaborator@mail.com"))
-        );
+            10L,
+            "Updated task",
+            TaskPriority.HIGH,
+            TaskStatus.IN_PROGRESS,
+            new UserShortResponse(1L, "Owner", "User", "owner@mail.com"),
+            Set.of(new UserShortResponse(2L, "Collaborator", "User", "collaborator@mail.com")));
 
         when(taskRepository.findById(10L)).thenReturn(Optional.of(task));
         when(userRepository.findAllById(Set.of(2L))).thenReturn(List.of(collaborator));
@@ -431,56 +418,54 @@ class TaskServiceTest {
     @Test
     void updateShouldReplaceFullCollaboratorSet() {
         User owner = User.builder()
-                .id(1L)
-                .firstName("Owner")
-                .lastName("User")
-                .email("owner@mail.com")
-                .passwordHash("hash")
-                .role(Role.USER)
-                .build();
+            .id(1L)
+            .firstName("Owner")
+            .lastName("User")
+            .email("owner@mail.com")
+            .passwordHash("hash")
+            .role(Role.USER)
+            .build();
 
         User oldCollaborator = User.builder()
-                .id(2L)
-                .firstName("Old")
-                .lastName("Collaborator")
-                .email("old@mail.com")
-                .passwordHash("hash")
-                .role(Role.USER)
-                .build();
+            .id(2L)
+            .firstName("Old")
+            .lastName("Collaborator")
+            .email("old@mail.com")
+            .passwordHash("hash")
+            .role(Role.USER)
+            .build();
 
         User newCollaborator = User.builder()
-                .id(3L)
-                .firstName("New")
-                .lastName("Collaborator")
-                .email("new@mail.com")
-                .passwordHash("hash")
-                .role(Role.USER)
-                .build();
+            .id(3L)
+            .firstName("New")
+            .lastName("Collaborator")
+            .email("new@mail.com")
+            .passwordHash("hash")
+            .role(Role.USER)
+            .build();
 
         Task task = Task.builder()
-                .id(10L)
-                .name("Old task")
-                .priority(TaskPriority.LOW)
-                .status(TaskStatus.TODO)
-                .owner(owner)
-                .collaborators(Set.of(oldCollaborator))
-                .build();
+            .id(10L)
+            .name("Old task")
+            .priority(TaskPriority.LOW)
+            .status(TaskStatus.TODO)
+            .owner(owner)
+            .collaborators(Set.of(oldCollaborator))
+            .build();
 
         TaskUpdateRequest request = new TaskUpdateRequest(
-                "Updated task",
-                TaskPriority.HIGH,
-                TaskStatus.IN_PROGRESS,
-                Set.of(3L)
-        );
+            "Updated task",
+            TaskPriority.HIGH,
+            TaskStatus.IN_PROGRESS,
+            Set.of(3L));
 
         TaskResponse response = new TaskResponse(
-                10L,
-                "Updated task",
-                TaskPriority.HIGH,
-                TaskStatus.IN_PROGRESS,
-                new UserShortResponse(1L, "Owner", "User", "owner@mail.com"),
-                Set.of(new UserShortResponse(3L, "New", "Collaborator", "new@mail.com"))
-        );
+            10L,
+            "Updated task",
+            TaskPriority.HIGH,
+            TaskStatus.IN_PROGRESS,
+            new UserShortResponse(1L, "Owner", "User", "owner@mail.com"),
+            Set.of(new UserShortResponse(3L, "New", "Collaborator", "new@mail.com")));
 
         when(taskRepository.findById(10L)).thenReturn(Optional.of(task));
         when(userRepository.findAllById(Set.of(3L))).thenReturn(List.of(newCollaborator));
@@ -492,8 +477,8 @@ class TaskServiceTest {
 
         assertThat(actual).isEqualTo(response);
         assertThat(task.getCollaborators())
-                .containsExactlyInAnyOrder(newCollaborator)
-                .doesNotContain(oldCollaborator);
+            .containsExactlyInAnyOrder(newCollaborator)
+            .doesNotContain(oldCollaborator);
 
         verify(taskRepository).save(task);
     }
@@ -501,47 +486,45 @@ class TaskServiceTest {
     @Test
     void updateShouldRemoveAllCollaboratorsWhenEmptySetIsProvided() {
         User owner = User.builder()
-                .id(1L)
-                .firstName("Owner")
-                .lastName("User")
-                .email("owner@mail.com")
-                .passwordHash("hash")
-                .role(Role.USER)
-                .build();
+            .id(1L)
+            .firstName("Owner")
+            .lastName("User")
+            .email("owner@mail.com")
+            .passwordHash("hash")
+            .role(Role.USER)
+            .build();
 
         User collaborator = User.builder()
-                .id(2L)
-                .firstName("Collaborator")
-                .lastName("User")
-                .email("collaborator@mail.com")
-                .passwordHash("hash")
-                .role(Role.USER)
-                .build();
+            .id(2L)
+            .firstName("Collaborator")
+            .lastName("User")
+            .email("collaborator@mail.com")
+            .passwordHash("hash")
+            .role(Role.USER)
+            .build();
 
         Task task = Task.builder()
-                .id(10L)
-                .name("Task")
-                .priority(TaskPriority.HIGH)
-                .status(TaskStatus.TODO)
-                .owner(owner)
-                .collaborators(Set.of(collaborator))
-                .build();
+            .id(10L)
+            .name("Task")
+            .priority(TaskPriority.HIGH)
+            .status(TaskStatus.TODO)
+            .owner(owner)
+            .collaborators(Set.of(collaborator))
+            .build();
 
         TaskUpdateRequest request = new TaskUpdateRequest(
-                "Task",
-                TaskPriority.HIGH,
-                TaskStatus.DONE,
-                Set.of()
-        );
+            "Task",
+            TaskPriority.HIGH,
+            TaskStatus.DONE,
+            Set.of());
 
         TaskResponse response = new TaskResponse(
-                10L,
-                "Task",
-                TaskPriority.HIGH,
-                TaskStatus.DONE,
-                new UserShortResponse(1L, "Owner", "User", "owner@mail.com"),
-                Set.of()
-        );
+            10L,
+            "Task",
+            TaskPriority.HIGH,
+            TaskStatus.DONE,
+            new UserShortResponse(1L, "Owner", "User", "owner@mail.com"),
+            Set.of());
 
         when(taskRepository.findById(10L)).thenReturn(Optional.of(task));
         when(validator.validate(task)).thenReturn(task);
@@ -560,35 +543,34 @@ class TaskServiceTest {
     @Test
     void updateShouldThrowNotFoundExceptionWhenCollaboratorDoesNotExist() {
         User owner = User.builder()
-                .id(1L)
-                .firstName("Owner")
-                .lastName("User")
-                .email("owner@mail.com")
-                .passwordHash("hash")
-                .role(Role.USER)
-                .build();
+            .id(1L)
+            .firstName("Owner")
+            .lastName("User")
+            .email("owner@mail.com")
+            .passwordHash("hash")
+            .role(Role.USER)
+            .build();
 
         Task task = Task.builder()
-                .id(10L)
-                .name("Task")
-                .priority(TaskPriority.HIGH)
-                .status(TaskStatus.TODO)
-                .owner(owner)
-                .build();
+            .id(10L)
+            .name("Task")
+            .priority(TaskPriority.HIGH)
+            .status(TaskStatus.TODO)
+            .owner(owner)
+            .build();
 
         TaskUpdateRequest request = new TaskUpdateRequest(
-                "Updated task",
-                TaskPriority.HIGH,
-                TaskStatus.IN_PROGRESS,
-                Set.of(99L)
-        );
+            "Updated task",
+            TaskPriority.HIGH,
+            TaskStatus.IN_PROGRESS,
+            Set.of(99L));
 
         when(taskRepository.findById(10L)).thenReturn(Optional.of(task));
         when(userRepository.findAllById(Set.of(99L))).thenReturn(List.of());
 
         assertThatThrownBy(() -> taskService.update(10L, request))
-                .isInstanceOf(NotFoundException.class)
-                .hasMessage("Users with ids [99] were not found");
+            .isInstanceOf(NotFoundException.class)
+            .hasMessage("Users with ids [99] were not found");
 
         verify(taskRepository, never()).save(any());
     }
@@ -596,34 +578,33 @@ class TaskServiceTest {
     @Test
     void updateShouldThrowConflictExceptionWhenOwnerIsCollaborator() {
         User owner = User.builder()
-                .id(1L)
-                .firstName("Owner")
-                .lastName("User")
-                .email("owner@mail.com")
-                .passwordHash("hash")
-                .role(Role.USER)
-                .build();
+            .id(1L)
+            .firstName("Owner")
+            .lastName("User")
+            .email("owner@mail.com")
+            .passwordHash("hash")
+            .role(Role.USER)
+            .build();
 
         Task task = Task.builder()
-                .id(10L)
-                .name("Task")
-                .priority(TaskPriority.HIGH)
-                .status(TaskStatus.TODO)
-                .owner(owner)
-                .build();
+            .id(10L)
+            .name("Task")
+            .priority(TaskPriority.HIGH)
+            .status(TaskStatus.TODO)
+            .owner(owner)
+            .build();
 
         TaskUpdateRequest request = new TaskUpdateRequest(
-                "Updated task",
-                TaskPriority.MEDIUM,
-                TaskStatus.IN_PROGRESS,
-                Set.of(1L)
-        );
+            "Updated task",
+            TaskPriority.MEDIUM,
+            TaskStatus.IN_PROGRESS,
+            Set.of(1L));
 
         when(taskRepository.findById(10L)).thenReturn(Optional.of(task));
 
         assertThatThrownBy(() -> taskService.update(10L, request))
-                .isInstanceOf(ConflictException.class)
-                .hasMessage("Task owner cannot be added as collaborator");
+            .isInstanceOf(ConflictException.class)
+            .hasMessage("Task owner cannot be added as collaborator");
 
         verify(userRepository, never()).findAllById(any());
         verify(taskRepository, never()).save(any());
@@ -632,17 +613,16 @@ class TaskServiceTest {
     @Test
     void updateShouldThrowNotFoundExceptionWhenTaskDoesNotExist() {
         TaskUpdateRequest request = new TaskUpdateRequest(
-                "Updated task",
-                TaskPriority.HIGH,
-                TaskStatus.IN_PROGRESS,
-                Set.of()
-        );
+            "Updated task",
+            TaskPriority.HIGH,
+            TaskStatus.IN_PROGRESS,
+            Set.of());
 
         when(taskRepository.findById(99L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> taskService.update(99L, request))
-                .isInstanceOf(NotFoundException.class)
-                .hasMessage("Task with id '99' was not found");
+            .isInstanceOf(NotFoundException.class)
+            .hasMessage("Task with id '99' was not found");
     }
 
     @Test
