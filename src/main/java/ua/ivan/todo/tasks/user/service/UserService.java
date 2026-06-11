@@ -50,17 +50,16 @@ public class UserService {
     @Transactional(readOnly = true)
     public List<UserResponse> findAll() {
         return userRepository.findAll()
-                .stream()
-                .map(userMapper::toResponse)
-                .toList();
+            .stream()
+            .map(userMapper::toResponse)
+            .toList();
     }
 
     @Transactional(readOnly = true)
     public PageResponse<UserResponse> findAll(Pageable pageable) {
         return PageResponse.from(
-                userRepository.findAll(pageable)
-                        .map(userMapper::toResponse)
-        );
+            userRepository.findAll(pageable)
+                .map(userMapper::toResponse));
     }
 
     @Transactional(readOnly = true)
@@ -97,7 +96,7 @@ public class UserService {
 
     private User getUserOrThrow(Long id) {
         return userRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException(USER_NOT_FOUND_MESSAGE.formatted(id)));
+            .orElseThrow(() -> new NotFoundException(USER_NOT_FOUND_MESSAGE.formatted(id)));
     }
 
     private void validateEmailIsUnique(String email) {
@@ -108,9 +107,9 @@ public class UserService {
 
     private void validateEmailIsUniqueForUpdate(String email, Long currentUserId) {
         userRepository.findByEmail(email)
-                .filter(existingUser -> !existingUser.getId().equals(currentUserId))
-                .ifPresent(existingUser -> {
-                    throw new ConflictException(EMAIL_ALREADY_EXISTS_MESSAGE.formatted(email));
-                });
+            .filter(existingUser -> !existingUser.getId().equals(currentUserId))
+            .ifPresent(existingUser -> {
+                throw new ConflictException(EMAIL_ALREADY_EXISTS_MESSAGE.formatted(email));
+            });
     }
 }

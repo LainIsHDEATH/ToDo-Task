@@ -10,14 +10,11 @@ import java.util.Set;
 
 public record TaskCreateRequest(
 
-        @NotBlank(message = "Task name is required")
-        @Size(max = 255, message = "Task name must not exceed 255 characters")
-        String name,
+    @NotBlank(message = "Task name is required") @Size(max = 255,
+        message = "Task name must not exceed 255 characters") String name,
 
-        @NotNull(message = "Task priority is required")
-        TaskPriority priority,
+    @NotNull(message = "Task priority is required") TaskPriority priority,
 
-        Set<@NotNull(message = "Collaborator id must not be null")
-        @Positive(message = "Collaborator id must be positive") Long> collaboratorIds
-) {
+    Set<@NotNull(message = "Collaborator id must not be null") @Positive(
+        message = "Collaborator id must be positive") Long> collaboratorIds) {
 }

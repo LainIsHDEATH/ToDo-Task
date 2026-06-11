@@ -29,45 +29,45 @@ class CustomUserDetailsServiceTest {
     @Test
     void loadUserByUsernameShouldReturnUserDetailsWhenUserExists() {
         User user = User.builder()
-                .id(1L)
-                .firstName("Nick")
-                .lastName("Green")
-                .email("nick@mail.com")
-                .passwordHash("$2a$10$encoded-password")
-                .role(Role.USER)
-                .build();
+            .id(1L)
+            .firstName("Nick")
+            .lastName("Green")
+            .email("nick@mail.com")
+            .passwordHash("$2a$10$encoded-password")
+            .role(Role.USER)
+            .build();
 
         when(userRepository.findByEmail("nick@mail.com"))
-                .thenReturn(Optional.of(user));
+            .thenReturn(Optional.of(user));
 
         UserDetails userDetails = userDetailsService.loadUserByUsername("nick@mail.com");
 
         assertThat(userDetails.getUsername()).isEqualTo("nick@mail.com");
         assertThat(userDetails.getPassword()).isEqualTo("$2a$10$encoded-password");
         assertThat(userDetails.getAuthorities())
-                .extracting("authority")
-                .containsExactly("ROLE_USER");
+            .extracting("authority")
+            .containsExactly("ROLE_USER");
     }
 
     @Test
     void loadUserByUsernameShouldConvertAdminRoleToGrantedAuthority() {
         User user = User.builder()
-                .id(2L)
-                .firstName("Admin")
-                .lastName("User")
-                .email("admin@mail.com")
-                .passwordHash("$2a$10$encoded-password")
-                .role(Role.ADMIN)
-                .build();
+            .id(2L)
+            .firstName("Admin")
+            .lastName("User")
+            .email("admin@mail.com")
+            .passwordHash("$2a$10$encoded-password")
+            .role(Role.ADMIN)
+            .build();
 
         when(userRepository.findByEmail("admin@mail.com"))
-                .thenReturn(Optional.of(user));
+            .thenReturn(Optional.of(user));
 
         UserDetails userDetails = userDetailsService.loadUserByUsername("admin@mail.com");
 
         assertThat(userDetails.getAuthorities())
-                .extracting("authority")
-                .containsExactly("ROLE_ADMIN");
+            .extracting("authority")
+            .containsExactly("ROLE_ADMIN");
     }
 
     @Test

@@ -24,14 +24,13 @@ public class CustomUserDetailsService implements UserDetailsService {
     @Transactional(readOnly = true)
     public UserDetails loadUserByUsername(String email) {
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException(
-                        "User with email '%s' was not found".formatted(email)
-                ));
+            .orElseThrow(() -> new UsernameNotFoundException(
+                "User with email '%s' was not found".formatted(email)));
 
         return org.springframework.security.core.userdetails.User.builder()
-                .username(user.getEmail())
-                .password(user.getPasswordHash())
-                .authorities(List.of(new SimpleGrantedAuthority(ROLE_PREFIX + user.getRole().name())))
-                .build();
+            .username(user.getEmail())
+            .password(user.getPasswordHash())
+            .authorities(List.of(new SimpleGrantedAuthority(ROLE_PREFIX + user.getRole().name())))
+            .build();
     }
 }

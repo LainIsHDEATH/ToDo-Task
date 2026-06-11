@@ -17,22 +17,22 @@ import java.util.Set;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @DataJpaTest(properties = {
-        "spring.jpa.hibernate.ddl-auto=none",
-        "spring.liquibase.enabled=true"
+    "spring.jpa.hibernate.ddl-auto=none",
+    "spring.liquibase.enabled=true"
 })
 class UserDeletionCascadeTest {
 
     private static final String COUNT_COLLABORATOR_LINKS_BY_TASK_ID_QUERY = """
-            SELECT count(*)
-            FROM task_collaborators
-            WHERE task_id = ?
-            """;
+        SELECT count(*)
+        FROM task_collaborators
+        WHERE task_id = ?
+        """;
 
     private static final String COUNT_COLLABORATOR_LINKS_BY_USER_ID_QUERY = """
-            SELECT count(*)
-            FROM task_collaborators
-            WHERE user_id = ?
-            """;
+        SELECT count(*)
+        FROM task_collaborators
+        WHERE user_id = ?
+        """;
 
     @Autowired
     private UserRepository userRepository;
@@ -102,38 +102,36 @@ class UserDeletionCascadeTest {
 
     private Long countCollaboratorLinksByTaskId(Long taskId) {
         return jdbcTemplate.queryForObject(
-                COUNT_COLLABORATOR_LINKS_BY_TASK_ID_QUERY,
-                Long.class,
-                taskId
-        );
+            COUNT_COLLABORATOR_LINKS_BY_TASK_ID_QUERY,
+            Long.class,
+            taskId);
     }
 
     private Long countCollaboratorLinksByUserId(Long userId) {
         return jdbcTemplate.queryForObject(
-                COUNT_COLLABORATOR_LINKS_BY_USER_ID_QUERY,
-                Long.class,
-                userId
-        );
+            COUNT_COLLABORATOR_LINKS_BY_USER_ID_QUERY,
+            Long.class,
+            userId);
     }
 
     private User saveUser(String firstName, String lastName, String email) {
         User user = User.builder()
-                .firstName(firstName)
-                .lastName(lastName)
-                .email(email)
-                .passwordHash("hashed-password")
-                .role(Role.USER)
-                .build();
+            .firstName(firstName)
+            .lastName(lastName)
+            .email(email)
+            .passwordHash("hashed-password")
+            .role(Role.USER)
+            .build();
 
         return userRepository.saveAndFlush(user);
     }
 
     private Task createTask(String name, User owner) {
         return Task.builder()
-                .name(name)
-                .priority(TaskPriority.MEDIUM)
-                .status(TaskStatus.TODO)
-                .owner(owner)
-                .build();
+            .name(name)
+            .priority(TaskPriority.MEDIUM)
+            .status(TaskStatus.TODO)
+            .owner(owner)
+            .build();
     }
 }

@@ -37,61 +37,59 @@ class AuthControllerTest {
     @BeforeEach
     void setUp() {
         mockMvc = MockMvcBuilders
-                .standaloneSetup(authController)
-                .setControllerAdvice(new GlobalExceptionHandler())
-                .setValidator(validator())
-                .build();
+            .standaloneSetup(authController)
+            .setControllerAdvice(new GlobalExceptionHandler())
+            .setValidator(validator())
+            .build();
     }
 
     @Test
     void registerShouldReturnCreatedUser() throws Exception {
         UserRegistrationRequest request = new UserRegistrationRequest(
-                "Nick",
-                "Green",
-                "nick@mail.com",
-                "password123"
-        );
+            "Nick",
+            "Green",
+            "nick@mail.com",
+            "password123");
 
         UserResponse response = new UserResponse(
-                1L,
-                "Nick",
-                "Green",
-                "nick@mail.com",
-                Role.USER
-        );
+            1L,
+            "Nick",
+            "Green",
+            "nick@mail.com",
+            Role.USER);
 
         when(userService.register(request)).thenReturn(response);
 
         mockMvc.perform(post("/api/auth/register")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id").value(1))
-                .andExpect(jsonPath("$.firstName").value("Nick"))
-                .andExpect(jsonPath("$.lastName").value("Green"))
-                .andExpect(jsonPath("$.email").value("nick@mail.com"))
-                .andExpect(jsonPath("$.role").value("USER"))
-                .andExpect(jsonPath("$.passwordHash").doesNotExist());
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(request)))
+            .andExpect(status().isCreated())
+            .andExpect(jsonPath("$.id").value(1))
+            .andExpect(jsonPath("$.firstName").value("Nick"))
+            .andExpect(jsonPath("$.lastName").value("Green"))
+            .andExpect(jsonPath("$.email").value("nick@mail.com"))
+            .andExpect(jsonPath("$.role").value("USER"))
+            .andExpect(jsonPath("$.passwordHash").doesNotExist());
     }
 
     @Test
     void registerShouldReturnBadRequestWhenRequestIsInvalid() throws Exception {
         String body = """
-                {
-                  "email": "invalid-email",
-                  "password": "123"
-                }
-                """;
+            {
+              "email": "invalid-email",
+              "password": "123"
+            }
+            """;
 
         mockMvc.perform(post("/api/auth/register")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(body))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.status").value(400))
-                .andExpect(jsonPath("$.error").value("Bad Request"))
-                .andExpect(jsonPath("$.message").value("Request validation failed"))
-                .andExpect(jsonPath("$.path").value("/api/auth/register"))
-                .andExpect(jsonPath("$.fieldErrors").isArray());
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(body))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.status").value(400))
+            .andExpect(jsonPath("$.error").value("Bad Request"))
+            .andExpect(jsonPath("$.message").value("Request validation failed"))
+            .andExpect(jsonPath("$.path").value("/api/auth/register"))
+            .andExpect(jsonPath("$.fieldErrors").isArray());
     }
 
     private static LocalValidatorFactoryBean validator() {

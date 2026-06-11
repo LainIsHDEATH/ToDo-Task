@@ -19,12 +19,12 @@ class UserRepositoryTest {
     @Test
     void findByEmailShouldReturnUserWhenEmailExists() {
         User user = User.builder()
-                .firstName("Nick")
-                .lastName("Green")
-                .email("nick@mail.com")
-                .passwordHash("hashed-password")
-                .role(Role.USER)
-                .build();
+            .firstName("Nick")
+            .lastName("Green")
+            .email("nick@mail.com")
+            .passwordHash("hashed-password")
+            .role(Role.USER)
+            .build();
 
         userRepository.save(user);
 
@@ -37,12 +37,12 @@ class UserRepositoryTest {
     @Test
     void existsByEmailShouldReturnTrueWhenEmailExists() {
         User user = User.builder()
-                .firstName("Nora")
-                .lastName("White")
-                .email("nora@mail.com")
-                .passwordHash("hashed-password")
-                .role(Role.USER)
-                .build();
+            .firstName("Nora")
+            .lastName("White")
+            .email("nora@mail.com")
+            .passwordHash("hashed-password")
+            .role(Role.USER)
+            .build();
 
         userRepository.save(user);
 

@@ -21,29 +21,26 @@ public class CorsConfig {
         CorsConfiguration configuration = new CorsConfiguration();
 
         configuration.setAllowedOrigins(Arrays.stream(allowedOrigins.split(","))
-                .map(String::trim)
-                .filter(origin -> !origin.isBlank())
-                .toList());
+            .map(String::trim)
+            .filter(origin -> !origin.isBlank())
+            .toList());
 
         configuration.setAllowedMethods(List.of(
-                "GET",
-                "POST",
-                "PUT",
-                "PATCH",
-                "DELETE",
-                "OPTIONS"
-        ));
+            "GET",
+            "POST",
+            "PUT",
+            "PATCH",
+            "DELETE",
+            "OPTIONS"));
 
         configuration.setAllowedHeaders(List.of(
-                "Authorization",
-                "Content-Type",
-                "X-Transaction-Id"
-        ));
+            "Authorization",
+            "Content-Type",
+            "X-Transaction-Id"));
 
         configuration.setExposedHeaders(List.of(
-                "Authorization",
-                "X-Transaction-Id"
-        ));
+            "Authorization",
+            "X-Transaction-Id"));
 
         configuration.setAllowCredentials(false);
 

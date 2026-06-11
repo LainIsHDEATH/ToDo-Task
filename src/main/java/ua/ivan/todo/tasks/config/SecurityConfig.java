@@ -25,56 +25,53 @@ import ua.ivan.todo.tasks.common.exception.ErrorResponse;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    //    private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    // private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final ObjectMapper objectMapper;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http,
-                                                   DaoAuthenticationProvider authenticationProvider) throws Exception {
+        DaoAuthenticationProvider authenticationProvider) throws Exception {
         return http
-                .csrf(AbstractHttpConfigurer::disable)
-                .cors(Customizer.withDefaults())
-                .sessionManagement(configurer ->
-                        configurer.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                )
-//                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-                .exceptionHandling(configurer -> configurer
-                        .authenticationEntryPoint(authenticationEntryPoint())
-                        .accessDeniedHandler(accessDeniedHandler())
-                )
-                .authenticationProvider(authenticationProvider)
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/register").permitAll()
+            .csrf(AbstractHttpConfigurer::disable)
+            .cors(Customizer.withDefaults())
+            .sessionManagement(configurer -> configurer.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            // .addFilterBefore(jwtAuthenticationFilter,
+            // UsernamePasswordAuthenticationFilter.class)
+            .exceptionHandling(configurer -> configurer
+                .authenticationEntryPoint(authenticationEntryPoint())
+                .accessDeniedHandler(accessDeniedHandler()))
+            .authenticationProvider(authenticationProvider)
+            .authorizeHttpRequests(auth -> auth
+                .requestMatchers("/api/auth/register").permitAll()
 
-                        .requestMatchers("/swagger-ui/**").permitAll()
-                        .requestMatchers("/v3/api-docs/**").permitAll()
-                        .requestMatchers("/swagger-ui.html").permitAll()
+                .requestMatchers("/swagger-ui/**").permitAll()
+                .requestMatchers("/v3/api-docs/**").permitAll()
+                .requestMatchers("/swagger-ui.html").permitAll()
 
-                        .requestMatchers("/api/users/**").authenticated()
-                        .requestMatchers("/api/tasks/**").authenticated()
+                .requestMatchers("/api/users/**").authenticated()
+                .requestMatchers("/api/tasks/**").authenticated()
 
-                        .anyRequest().authenticated()
-                )
-                .httpBasic(Customizer.withDefaults())
-                .logout(AbstractHttpConfigurer::disable)
-                .build();
+                .anyRequest().authenticated())
+            .httpBasic(Customizer.withDefaults())
+            .logout(AbstractHttpConfigurer::disable)
+            .build();
     }
 
     @Bean
     public DaoAuthenticationProvider authenticationProvider(
-            UserDetailsService userDetailsService,
-            PasswordEncoder passwordEncoder
-    ) {
+        UserDetailsService userDetailsService,
+        PasswordEncoder passwordEncoder) {
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider(userDetailsService);
         provider.setPasswordEncoder(passwordEncoder);
 
         return provider;
     }
 
-//    @Bean
-//    public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
-//        return configuration.getAuthenticationManager();
-//    }
+    // @Bean
+    // public AuthenticationManager authenticationManager(
+    // AuthenticationConfiguration configuration) throws Exception {
+    // return configuration.getAuthenticationManager();
+    // }
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -87,10 +84,9 @@ public class SecurityConfig {
             response.setContentType(MediaType.APPLICATION_JSON_VALUE);
 
             ErrorResponse errorResponse = ErrorResponse.of(
-                    HttpStatus.UNAUTHORIZED,
-                    "Authentication is required",
-                    request.getRequestURI()
-            );
+                HttpStatus.UNAUTHORIZED,
+                "Authentication is required",
+                request.getRequestURI());
 
             objectMapper.writeValue(response.getOutputStream(), errorResponse);
         };
@@ -102,10 +98,9 @@ public class SecurityConfig {
             response.setContentType(MediaType.APPLICATION_JSON_VALUE);
 
             ErrorResponse errorResponse = ErrorResponse.of(
-                    HttpStatus.FORBIDDEN,
-                    "Access denied",
-                    request.getRequestURI()
-            );
+                HttpStatus.FORBIDDEN,
+                "Access denied",
+                request.getRequestURI());
 
             objectMapper.writeValue(response.getOutputStream(), errorResponse);
         };

@@ -37,9 +37,9 @@ class TaskRepositoryTest {
         List<Task> actual = taskRepository.findAllByOwnerId(owner.getId());
 
         assertThat(actual)
-                .hasSize(2)
-                .extracting(Task::getName)
-                .containsExactlyInAnyOrder("Task #1", "Task #2");
+            .hasSize(2)
+            .extracting(Task::getName)
+            .containsExactlyInAnyOrder("Task #1", "Task #2");
     }
 
     @Test
@@ -65,22 +65,22 @@ class TaskRepositoryTest {
 
     private User saveUser(String firstName, String lastName, String email) {
         User user = User.builder()
-                .firstName(firstName)
-                .lastName(lastName)
-                .email(email)
-                .passwordHash("hashed-password")
-                .role(Role.USER)
-                .build();
+            .firstName(firstName)
+            .lastName(lastName)
+            .email(email)
+            .passwordHash("hashed-password")
+            .role(Role.USER)
+            .build();
 
         return userRepository.save(user);
     }
 
     private Task createTask(String name, User owner) {
         return Task.builder()
-                .name(name)
-                .priority(TaskPriority.MEDIUM)
-                .status(TaskStatus.TODO)
-                .owner(owner)
-                .build();
+            .name(name)
+            .priority(TaskPriority.MEDIUM)
+            .status(TaskStatus.TODO)
+            .owner(owner)
+            .build();
     }
 }

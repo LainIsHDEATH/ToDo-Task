@@ -14,10 +14,9 @@ class PageResponseTest {
     @Test
     void fromShouldCreatePageResponseFromPage() {
         Page<String> page = new PageImpl<>(
-                List.of("first", "second"),
-                PageRequest.of(1, 2),
-                5
-        );
+            List.of("first", "second"),
+            PageRequest.of(1, 2),
+            5);
 
         PageResponse<String> actual = PageResponse.from(page);
 

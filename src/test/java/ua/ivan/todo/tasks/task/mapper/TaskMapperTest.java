@@ -18,8 +18,8 @@ import java.util.Set;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest(classes = {
-        TaskMapperImpl.class,
-        UserMapperImpl.class
+    TaskMapperImpl.class,
+    UserMapperImpl.class
 })
 class TaskMapperTest {
 
@@ -29,31 +29,31 @@ class TaskMapperTest {
     @Test
     void toResponseShouldMapTaskWithOwnerAndCollaborators() {
         User owner = User.builder()
-                .id(1L)
-                .firstName("Mike")
-                .lastName("Brown")
-                .email("mike@mail.com")
-                .passwordHash("hashed-password")
-                .role(Role.USER)
-                .build();
+            .id(1L)
+            .firstName("Mike")
+            .lastName("Brown")
+            .email("mike@mail.com")
+            .passwordHash("hashed-password")
+            .role(Role.USER)
+            .build();
 
         User collaborator = User.builder()
-                .id(2L)
-                .firstName("Nora")
-                .lastName("White")
-                .email("nora@mail.com")
-                .passwordHash("hashed-password")
-                .role(Role.USER)
-                .build();
+            .id(2L)
+            .firstName("Nora")
+            .lastName("White")
+            .email("nora@mail.com")
+            .passwordHash("hashed-password")
+            .role(Role.USER)
+            .build();
 
         Task task = Task.builder()
-                .id(10L)
-                .name("Task #1")
-                .priority(TaskPriority.HIGH)
-                .status(TaskStatus.IN_PROGRESS)
-                .owner(owner)
-                .collaborators(Set.of(collaborator))
-                .build();
+            .id(10L)
+            .name("Task #1")
+            .priority(TaskPriority.HIGH)
+            .status(TaskStatus.IN_PROGRESS)
+            .owner(owner)
+            .collaborators(Set.of(collaborator))
+            .build();
 
         TaskResponse response = taskMapper.toResponse(task);
 
@@ -67,18 +67,18 @@ class TaskMapperTest {
 
         assertThat(response.collaborators()).hasSize(1);
         assertThat(response.collaborators())
-                .extracting("email")
-                .containsExactly("nora@mail.com");
+            .extracting("email")
+            .containsExactly("nora@mail.com");
     }
 
     @Test
     void toListItemResponseShouldMapTaskWithoutOwnerAndCollaborators() {
         Task task = Task.builder()
-                .id(20L)
-                .name("Task #2")
-                .priority(TaskPriority.LOW)
-                .status(TaskStatus.TODO)
-                .build();
+            .id(20L)
+            .name("Task #2")
+            .priority(TaskPriority.LOW)
+            .status(TaskStatus.TODO)
+            .build();
 
         TaskListItemResponse response = taskMapper.toListItemResponse(task);
 
@@ -91,10 +91,9 @@ class TaskMapperTest {
     @Test
     void toEntityShouldMapCreateRequestWithoutOwnerStatusAndCollaborators() {
         TaskCreateRequest request = new TaskCreateRequest(
-                "Task #3",
-                TaskPriority.MEDIUM,
-                Set.of(1L, 2L)
-        );
+            "Task #3",
+            TaskPriority.MEDIUM,
+            Set.of(1L, 2L));
 
         Task task = taskMapper.toEntity(request);
 

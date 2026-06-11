@@ -7,11 +7,10 @@ import ua.ivan.todo.tasks.user.dto.response.UserShortResponse;
 import java.util.Set;
 
 public record TaskResponse(
-        Long id,
-        String name,
-        TaskPriority priority,
-        TaskStatus status,
-        UserShortResponse owner,
-        Set<UserShortResponse> collaborators
-) {
+    Long id,
+    String name,
+    TaskPriority priority,
+    TaskStatus status,
+    UserShortResponse owner,
+    Set<UserShortResponse> collaborators) {
 }

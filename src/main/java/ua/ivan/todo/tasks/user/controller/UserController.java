@@ -21,20 +21,17 @@ import java.util.Set;
 public class UserController {
 
     private static final Set<String> ALLOWED_SORT_FIELDS = Set.of(
-            "id",
-            "firstName",
-            "lastName",
-            "email",
-            "role"
-    );
+        "id",
+        "firstName",
+        "lastName",
+        "email",
+        "role");
 
     private final UserService userService;
 
     @GetMapping
     public PageResponse<UserResponse> findAll(
-            @PageableDefault(size = 20, sort = "id", direction = Sort.Direction.ASC)
-            Pageable pageable
-    ) {
+        @PageableDefault(size = 20, sort = "id", direction = Sort.Direction.ASC) Pageable pageable) {
         SortValidator.validate(pageable.getSort(), ALLOWED_SORT_FIELDS);
 
         return userService.findAll(pageable);
@@ -47,9 +44,8 @@ public class UserController {
 
     @PutMapping("/{id}")
     public UserResponse update(
-            @PathVariable Long id,
-            @Valid @RequestBody UserUpdateRequest request
-    ) {
+        @PathVariable Long id,
+        @Valid @RequestBody UserUpdateRequest request) {
         return userService.update(id, request);
     }
 

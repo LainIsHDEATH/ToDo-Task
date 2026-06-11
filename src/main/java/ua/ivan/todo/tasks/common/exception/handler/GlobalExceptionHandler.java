@@ -25,138 +25,118 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleMethodArgumentNotValid(
-            MethodArgumentNotValidException exception,
-            HttpServletRequest request
-    ) {
+        MethodArgumentNotValidException exception,
+        HttpServletRequest request) {
         List<FieldValidationError> fieldErrors = exception.getBindingResult()
-                .getFieldErrors()
-                .stream()
-                .map(error -> new FieldValidationError(
-                        error.getField(),
-                        error.getDefaultMessage(),
-                        error.getRejectedValue()
-                ))
-                .toList();
+            .getFieldErrors()
+            .stream()
+            .map(error -> new FieldValidationError(
+                error.getField(),
+                error.getDefaultMessage(),
+                error.getRejectedValue()))
+            .toList();
 
         return ErrorResponse.withFieldErrors(
-                HttpStatus.BAD_REQUEST,
-                "Request validation failed",
-                request.getRequestURI(),
-                fieldErrors
-        );
+            HttpStatus.BAD_REQUEST,
+            "Request validation failed",
+            request.getRequestURI(),
+            fieldErrors);
     }
 
     @ExceptionHandler(ConstraintViolationException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleConstraintViolation(
-            ConstraintViolationException exception,
-            HttpServletRequest request
-    ) {
+        ConstraintViolationException exception,
+        HttpServletRequest request) {
         List<FieldValidationError> fieldErrors = exception.getConstraintViolations()
-                .stream()
-                .map(violation -> new FieldValidationError(
-                        violation.getPropertyPath().toString(),
-                        violation.getMessage(),
-                        violation.getInvalidValue()
-                ))
-                .toList();
+            .stream()
+            .map(violation -> new FieldValidationError(
+                violation.getPropertyPath().toString(),
+                violation.getMessage(),
+                violation.getInvalidValue()))
+            .toList();
 
         return ErrorResponse.withFieldErrors(
-                HttpStatus.BAD_REQUEST,
-                "Validation failed",
-                request.getRequestURI(),
-                fieldErrors
-        );
+            HttpStatus.BAD_REQUEST,
+            "Validation failed",
+            request.getRequestURI(),
+            fieldErrors);
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleHttpMessageNotReadable(
-            HttpServletRequest request
-    ) {
+        HttpServletRequest request) {
         return ErrorResponse.of(
-                HttpStatus.BAD_REQUEST,
-                "Malformed JSON request",
-                request.getRequestURI()
-        );
+            HttpStatus.BAD_REQUEST,
+            "Malformed JSON request",
+            request.getRequestURI());
     }
 
     @ExceptionHandler(BadRequestException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleBadRequest(
-            BadRequestException exception,
-            HttpServletRequest request
-    ) {
+        BadRequestException exception,
+        HttpServletRequest request) {
         return ErrorResponse.of(
-                HttpStatus.BAD_REQUEST,
-                exception.getMessage(),
-                request.getRequestURI()
-        );
+            HttpStatus.BAD_REQUEST,
+            exception.getMessage(),
+            request.getRequestURI());
     }
 
     @ExceptionHandler({
-            NotFoundException.class,
-            UsernameNotFoundException.class
+        NotFoundException.class,
+        UsernameNotFoundException.class
     })
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public ErrorResponse handleNotFound(
-            NotFoundException exception,
-            HttpServletRequest request
-    ) {
+        NotFoundException exception,
+        HttpServletRequest request) {
         return ErrorResponse.of(
-                HttpStatus.NOT_FOUND,
-                exception.getMessage(),
-                request.getRequestURI()
-        );
+            HttpStatus.NOT_FOUND,
+            exception.getMessage(),
+            request.getRequestURI());
     }
 
     @ExceptionHandler(ConflictException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
     public ErrorResponse handleConflict(
-            ConflictException exception,
-            HttpServletRequest request
-    ) {
+        ConflictException exception,
+        HttpServletRequest request) {
         return ErrorResponse.of(
-                HttpStatus.CONFLICT,
-                exception.getMessage(),
-                request.getRequestURI()
-        );
+            HttpStatus.CONFLICT,
+            exception.getMessage(),
+            request.getRequestURI());
     }
 
     @ExceptionHandler(DeleteConflictException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
     public ErrorResponse handleDeleteConflict(
-            DeleteConflictException exception,
-            HttpServletRequest request
-    ) {
+        DeleteConflictException exception,
+        HttpServletRequest request) {
         return ErrorResponse.of(
-                HttpStatus.CONFLICT,
-                exception.getMessage(),
-                request.getRequestURI()
-        );
+            HttpStatus.CONFLICT,
+            exception.getMessage(),
+            request.getRequestURI());
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
     public ErrorResponse handleDataIntegrityViolation(
-            HttpServletRequest request
-    ) {
+        HttpServletRequest request) {
         return ErrorResponse.of(
-                HttpStatus.CONFLICT,
-                "Data integrity violation",
-                request.getRequestURI()
-        );
+            HttpStatus.CONFLICT,
+            "Data integrity violation",
+            request.getRequestURI());
     }
 
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ErrorResponse handleUnexpected(
-            HttpServletRequest request
-    ) {
+        HttpServletRequest request) {
         return ErrorResponse.of(
-                HttpStatus.INTERNAL_SERVER_ERROR,
-                "Unexpected server error",
-                request.getRequestURI()
-        );
+            HttpStatus.INTERNAL_SERVER_ERROR,
+            "Unexpected server error",
+            request.getRequestURI());
     }
 }
