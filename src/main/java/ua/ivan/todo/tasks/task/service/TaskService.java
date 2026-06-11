@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
+import ua.ivan.todo.tasks.common.exception.exceptions.ConflictException;
 import ua.ivan.todo.tasks.common.exception.exceptions.NotFoundException;
 import ua.ivan.todo.tasks.common.validation.DomainModelValidator;
 import ua.ivan.todo.tasks.task.dto.request.TaskCreateRequest;
@@ -30,6 +31,7 @@ public class TaskService {
     private static final String USER_NOT_FOUND_MESSAGE = "User with id '%d' was not found";
     private static final String TASK_NOT_FOUND_MESSAGE = "Task with id '%d' was not found";
     private static final String COLLABORATORS_NOT_FOUND_MESSAGE = "Users with ids %s were not found";
+    private static final String OWNER_AS_COLLABORATOR_MESSAGE = "Task owner cannot be added as collaborator";
 
     private final TaskRepository taskRepository;
     private final UserRepository userRepository;
@@ -60,7 +62,7 @@ public class TaskService {
         Task task = taskMapper.toEntity(request);
         task.setOwner(owner);
         task.setStatus(TaskStatus.TODO);
-        task.setCollaborators(resolveCollaborators(request.collaboratorIds()));
+        task.setCollaborators(resolveCollaborators(owner.getId(), request.collaboratorIds()));
 
         Task savedTask = taskRepository.save(validator.validate(task));
 
@@ -74,7 +76,7 @@ public class TaskService {
         task.setName(request.name());
         task.setPriority(request.priority());
         task.setStatus(request.status());
-        task.setCollaborators(resolveCollaborators(request.collaboratorIds()));
+        task.setCollaborators(resolveCollaborators(task.getOwner().getId(), request.collaboratorIds()));
 
         Task savedTask = taskRepository.save(validator.validate(task));
 
@@ -106,21 +108,27 @@ public class TaskService {
         }
     }
 
-    private Set<User> resolveCollaborators(Set<Long> collaboratorIds) {
+    private Set<User> resolveCollaborators(Long ownerId, Set<Long> collaboratorIds) {
         if (collaboratorIds == null || collaboratorIds.isEmpty()) {
             return new HashSet<>();
         }
 
-        List<User> users = userRepository.findAllById(collaboratorIds);
+        Set<Long> normalizedCollaboratorIds = new HashSet<>(collaboratorIds);
 
-        if (users.size() != collaboratorIds.size()) {
+        if (normalizedCollaboratorIds.contains(ownerId)) {
+            throw new ConflictException(OWNER_AS_COLLABORATOR_MESSAGE);
+        }
+
+        List<User> users = userRepository.findAllById(normalizedCollaboratorIds);
+
+        if (users.size() != normalizedCollaboratorIds.size()) {
             Set<Long> foundIds = users.stream()
                     .map(User::getId)
                     .collect(Collectors.toSet());
 
-            Set<Long> missingIds = collaboratorIds.stream()
+            Set<Long> missingIds = normalizedCollaboratorIds.stream()
                     .filter(id -> !foundIds.contains(id))
-                    .collect(Collectors.toSet());
+                    .collect(Collectors.toCollection(HashSet::new));
 
             throw new NotFoundException(COLLABORATORS_NOT_FOUND_MESSAGE.formatted(missingIds));
         }
