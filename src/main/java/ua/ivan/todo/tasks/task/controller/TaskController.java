@@ -1,0 +1,53 @@
+package ua.ivan.todo.tasks.task.controller;
+
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.*;
+import ua.ivan.todo.tasks.task.dto.request.TaskCreateRequest;
+import ua.ivan.todo.tasks.task.dto.request.TaskUpdateRequest;
+import ua.ivan.todo.tasks.task.dto.response.TaskListItemResponse;
+import ua.ivan.todo.tasks.task.dto.response.TaskResponse;
+import ua.ivan.todo.tasks.task.service.TaskService;
+
+import java.util.List;
+
+@RestController
+@RequiredArgsConstructor
+public class TaskController {
+
+    private final TaskService taskService;
+
+    @GetMapping("/api/users/{userId}/tasks")
+    public List<TaskListItemResponse> findAllByOwnerId(@PathVariable Long userId) {
+        return taskService.findAllByOwnerId(userId);
+    }
+
+    @PostMapping("/api/users/{userId}/tasks")
+    @ResponseStatus(HttpStatus.CREATED)
+    public TaskResponse create(
+            @PathVariable Long userId,
+            @Valid @RequestBody TaskCreateRequest request
+    ) {
+        return taskService.create(userId, request);
+    }
+
+    @GetMapping("/api/tasks/{taskId}")
+    public TaskResponse findById(@PathVariable Long taskId) {
+        return taskService.findById(taskId);
+    }
+
+    @PutMapping("/api/tasks/{taskId}")
+    public TaskResponse update(
+            @PathVariable Long taskId,
+            @Valid @RequestBody TaskUpdateRequest request
+    ) {
+        return taskService.update(taskId, request);
+    }
+
+    @DeleteMapping("/api/tasks/{taskId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteById(@PathVariable Long taskId) {
+        taskService.deleteById(taskId);
+    }
+}
