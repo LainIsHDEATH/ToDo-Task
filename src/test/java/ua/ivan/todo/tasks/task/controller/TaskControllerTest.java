@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -11,6 +12,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
+import ua.ivan.todo.tasks.common.exception.exceptions.ConflictException;
 import ua.ivan.todo.tasks.common.exception.exceptions.NotFoundException;
 import ua.ivan.todo.tasks.common.exception.handler.GlobalExceptionHandler;
 import ua.ivan.todo.tasks.task.dto.request.TaskCreateRequest;
@@ -25,6 +27,7 @@ import ua.ivan.todo.tasks.user.dto.response.UserShortResponse;
 import java.util.List;
 import java.util.Set;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -156,6 +159,67 @@ class TaskControllerTest {
     }
 
     @Test
+    void createShouldNormalizeDuplicateCollaboratorIdsInRequest() throws Exception {
+        String body = """
+                {
+                  "name": "New task",
+                  "priority": "HIGH",
+                  "collaboratorIds": [2, 2, 2]
+                }
+                """;
+
+        TaskResponse response = new TaskResponse(
+                10L,
+                "New task",
+                TaskPriority.HIGH,
+                TaskStatus.TODO,
+                new UserShortResponse(1L, "Nick", "Green", "nick@mail.com"),
+                Set.of(new UserShortResponse(2L, "Nora", "White", "nora@mail.com"))
+        );
+
+        when(taskService.create(eq(1L), any(TaskCreateRequest.class))).thenReturn(response);
+
+        mockMvc.perform(post("/api/users/{userId}/tasks", 1L)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").value(10))
+                .andExpect(jsonPath("$.name").value("New task"))
+                .andExpect(jsonPath("$.priority").value("HIGH"))
+                .andExpect(jsonPath("$.status").value("TODO"))
+                .andExpect(jsonPath("$.owner.id").value(1))
+                .andExpect(jsonPath("$.collaborators").isArray());
+
+        ArgumentCaptor<TaskCreateRequest> requestCaptor = ArgumentCaptor.forClass(TaskCreateRequest.class);
+
+        verify(taskService).create(eq(1L), requestCaptor.capture());
+
+        assertThat(requestCaptor.getValue().collaboratorIds())
+                .containsExactly(2L);
+    }
+
+    @Test
+    void createShouldReturnConflictWhenOwnerIsCollaborator() throws Exception {
+        TaskCreateRequest request = new TaskCreateRequest(
+                "New task",
+                TaskPriority.HIGH,
+                Set.of(1L)
+        );
+
+        when(taskService.create(1L, request))
+                .thenThrow(new ConflictException("Task owner cannot be added as collaborator"));
+
+        mockMvc.perform(post("/api/users/{userId}/tasks", 1L)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.status").value(409))
+                .andExpect(jsonPath("$.error").value("Conflict"))
+                .andExpect(jsonPath("$.message").value("Task owner cannot be added as collaborator"))
+                .andExpect(jsonPath("$.path").value("/api/users/1/tasks"));
+    }
+
+    @Test
     void createShouldReturnBadRequestWhenRequestIsInvalid() throws Exception {
         String body = """
                 {
@@ -205,6 +269,69 @@ class TaskControllerTest {
                 .andExpect(jsonPath("$.status").value("DONE"))
                 .andExpect(jsonPath("$.owner.id").value(1))
                 .andExpect(jsonPath("$.collaborators").isArray());
+    }
+
+    @Test
+    void updateShouldNormalizeDuplicateCollaboratorIdsInRequest() throws Exception {
+        String body = """
+                {
+                  "name": "Updated task",
+                  "priority": "HIGH",
+                  "status": "IN_PROGRESS",
+                  "collaboratorIds": [2, 2, 2]
+                }
+                """;
+
+        TaskResponse response = new TaskResponse(
+                10L,
+                "Updated task",
+                TaskPriority.HIGH,
+                TaskStatus.IN_PROGRESS,
+                new UserShortResponse(1L, "Nick", "Green", "nick@mail.com"),
+                Set.of(new UserShortResponse(2L, "Nora", "White", "nora@mail.com"))
+        );
+
+        when(taskService.update(eq(10L), any(TaskUpdateRequest.class))).thenReturn(response);
+
+        mockMvc.perform(put("/api/tasks/{taskId}", 10L)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(10))
+                .andExpect(jsonPath("$.name").value("Updated task"))
+                .andExpect(jsonPath("$.priority").value("HIGH"))
+                .andExpect(jsonPath("$.status").value("IN_PROGRESS"))
+                .andExpect(jsonPath("$.owner.id").value(1))
+                .andExpect(jsonPath("$.collaborators").isArray());
+
+        ArgumentCaptor<TaskUpdateRequest> requestCaptor = ArgumentCaptor.forClass(TaskUpdateRequest.class);
+
+        verify(taskService).update(eq(10L), requestCaptor.capture());
+
+        assertThat(requestCaptor.getValue().collaboratorIds())
+                .containsExactly(2L);
+    }
+
+    @Test
+    void updateShouldReturnConflictWhenOwnerIsCollaborator() throws Exception {
+        TaskUpdateRequest request = new TaskUpdateRequest(
+                "Updated task",
+                TaskPriority.HIGH,
+                TaskStatus.IN_PROGRESS,
+                Set.of(1L)
+        );
+
+        when(taskService.update(10L, request))
+                .thenThrow(new ConflictException("Task owner cannot be added as collaborator"));
+
+        mockMvc.perform(put("/api/tasks/{taskId}", 10L)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.status").value(409))
+                .andExpect(jsonPath("$.error").value("Conflict"))
+                .andExpect(jsonPath("$.message").value("Task owner cannot be added as collaborator"))
+                .andExpect(jsonPath("$.path").value("/api/tasks/10"));
     }
 
     @Test
@@ -276,6 +403,7 @@ class TaskControllerTest {
     private static LocalValidatorFactoryBean validator() {
         LocalValidatorFactoryBean validator = new LocalValidatorFactoryBean();
         validator.afterPropertiesSet();
+
         return validator;
     }
 }
