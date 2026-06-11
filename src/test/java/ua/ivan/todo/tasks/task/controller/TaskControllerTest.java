@@ -68,7 +68,7 @@ class TaskControllerTest {
                 .andExpect(jsonPath("$[0].id").value(1))
                 .andExpect(jsonPath("$[0].name").value("First task"))
                 .andExpect(jsonPath("$[0].priority").value("HIGH"))
-                .andExpect(jsonPath("$[0].status").value("NEW"))
+                .andExpect(jsonPath("$[0].status").value("TODO"))
                 .andExpect(jsonPath("$[1].id").value(2))
                 .andExpect(jsonPath("$[1].name").value("Second task"))
                 .andExpect(jsonPath("$[1].priority").value("LOW"))
@@ -106,7 +106,7 @@ class TaskControllerTest {
                 .andExpect(jsonPath("$.id").value(10))
                 .andExpect(jsonPath("$.name").value("Task"))
                 .andExpect(jsonPath("$.priority").value("MEDIUM"))
-                .andExpect(jsonPath("$.status").value("NEW"))
+                .andExpect(jsonPath("$.status").value("TODO"))
                 .andExpect(jsonPath("$.owner.id").value(1))
                 .andExpect(jsonPath("$.collaborators").isArray());
     }
@@ -150,7 +150,7 @@ class TaskControllerTest {
                 .andExpect(jsonPath("$.id").value(10))
                 .andExpect(jsonPath("$.name").value("New task"))
                 .andExpect(jsonPath("$.priority").value("HIGH"))
-                .andExpect(jsonPath("$.status").value("NEW"))
+                .andExpect(jsonPath("$.status").value("TODO"))
                 .andExpect(jsonPath("$.owner.id").value(1))
                 .andExpect(jsonPath("$.collaborators").isArray());
     }
