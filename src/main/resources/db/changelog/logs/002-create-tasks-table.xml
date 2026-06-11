@@ -35,7 +35,8 @@
                                  baseColumnNames="owner_user_id"
                                  constraintName="fk_tasks_owner_user"
                                  referencedTableName="users"
-                                 referencedColumnNames="id"/>
+                                 referencedColumnNames="id"
+                                 onDelete="CASCADE"/>
 
         <createIndex tableName="tasks"
                      indexName="idx_tasks_owner_user_id">
