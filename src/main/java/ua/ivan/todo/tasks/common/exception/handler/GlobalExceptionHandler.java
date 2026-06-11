@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import ua.ivan.todo.tasks.common.exception.ErrorResponse;
 import ua.ivan.todo.tasks.common.exception.FieldValidationError;
+import ua.ivan.todo.tasks.common.exception.exceptions.BadRequestException;
 import ua.ivan.todo.tasks.common.exception.exceptions.ConflictException;
 import ua.ivan.todo.tasks.common.exception.exceptions.DeleteConflictException;
 import ua.ivan.todo.tasks.common.exception.exceptions.NotFoundException;
@@ -76,6 +77,19 @@ public class GlobalExceptionHandler {
         return ErrorResponse.of(
                 HttpStatus.BAD_REQUEST,
                 "Malformed JSON request",
+                request.getRequestURI()
+        );
+    }
+
+    @ExceptionHandler(BadRequestException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleBadRequest(
+            BadRequestException exception,
+            HttpServletRequest request
+    ) {
+        return ErrorResponse.of(
+                HttpStatus.BAD_REQUEST,
+                exception.getMessage(),
                 request.getRequestURI()
         );
     }

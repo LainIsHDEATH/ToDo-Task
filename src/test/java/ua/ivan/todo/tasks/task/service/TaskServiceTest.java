@@ -5,6 +5,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import ua.ivan.todo.tasks.common.dto.response.PageResponse;
 import ua.ivan.todo.tasks.common.exception.exceptions.ConflictException;
 import ua.ivan.todo.tasks.common.exception.exceptions.NotFoundException;
 import ua.ivan.todo.tasks.common.validation.DomainModelValidator;
@@ -89,6 +94,62 @@ class TaskServiceTest {
     }
 
     @Test
+    void findAllByOwnerIdShouldReturnPagedUserTasks() {
+        Pageable pageable = PageRequest.of(0, 20);
+
+        Task firstTask = Task.builder()
+                .id(1L)
+                .name("First task")
+                .priority(TaskPriority.HIGH)
+                .status(TaskStatus.TODO)
+                .build();
+
+        Task secondTask = Task.builder()
+                .id(2L)
+                .name("Second task")
+                .priority(TaskPriority.LOW)
+                .status(TaskStatus.DONE)
+                .build();
+
+        TaskListItemResponse firstResponse = new TaskListItemResponse(
+                1L,
+                "First task",
+                TaskPriority.HIGH,
+                TaskStatus.TODO
+        );
+
+        TaskListItemResponse secondResponse = new TaskListItemResponse(
+                2L,
+                "Second task",
+                TaskPriority.LOW,
+                TaskStatus.DONE
+        );
+
+        Page<Task> tasksPage = new PageImpl<>(
+                List.of(firstTask, secondTask),
+                pageable,
+                2
+        );
+
+        when(userRepository.existsById(1L)).thenReturn(true);
+        when(taskRepository.findAllByOwnerId(1L, pageable)).thenReturn(tasksPage);
+        when(taskMapper.toListItemResponse(firstTask)).thenReturn(firstResponse);
+        when(taskMapper.toListItemResponse(secondTask)).thenReturn(secondResponse);
+
+        PageResponse<TaskListItemResponse> actual = taskService.findAllByOwnerId(1L, pageable);
+
+        assertThat(actual.content()).containsExactly(firstResponse, secondResponse);
+        assertThat(actual.page()).isZero();
+        assertThat(actual.size()).isEqualTo(20);
+        assertThat(actual.totalElements()).isEqualTo(2);
+        assertThat(actual.totalPages()).isEqualTo(1);
+        assertThat(actual.first()).isTrue();
+        assertThat(actual.last()).isTrue();
+
+        verify(taskRepository).findAllByOwnerId(1L, pageable);
+    }
+
+    @Test
     void findAllByOwnerIdShouldThrowNotFoundExceptionWhenOwnerDoesNotExist() {
         when(userRepository.existsById(99L)).thenReturn(false);
 
@@ -97,6 +158,19 @@ class TaskServiceTest {
                 .hasMessage("User with id '99' was not found");
 
         verify(taskRepository, never()).findAllByOwnerId(any());
+    }
+
+    @Test
+    void findAllByOwnerIdPageableShouldThrowNotFoundExceptionWhenOwnerDoesNotExist() {
+        Pageable pageable = PageRequest.of(0, 20);
+
+        when(userRepository.existsById(99L)).thenReturn(false);
+
+        assertThatThrownBy(() -> taskService.findAllByOwnerId(99L, pageable))
+                .isInstanceOf(NotFoundException.class)
+                .hasMessage("User with id '99' was not found");
+
+        verify(taskRepository, never()).findAllByOwnerId(anyLong(), any(Pageable.class));
     }
 
     @Test

@@ -1,9 +1,11 @@
 package ua.ivan.todo.tasks.task.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
+import ua.ivan.todo.tasks.common.dto.response.PageResponse;
 import ua.ivan.todo.tasks.common.exception.exceptions.ConflictException;
 import ua.ivan.todo.tasks.common.exception.exceptions.NotFoundException;
 import ua.ivan.todo.tasks.common.validation.DomainModelValidator;
@@ -46,6 +48,16 @@ public class TaskService {
                 .stream()
                 .map(taskMapper::toListItemResponse)
                 .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public PageResponse<TaskListItemResponse> findAllByOwnerId(Long userId, Pageable pageable) {
+        ensureUserExists(userId);
+
+        return PageResponse.from(
+                taskRepository.findAllByOwnerId(userId, pageable)
+                        .map(taskMapper::toListItemResponse)
+        );
     }
 
     @Transactional(readOnly = true)

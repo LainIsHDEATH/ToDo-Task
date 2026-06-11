@@ -8,10 +8,14 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
+import ua.ivan.todo.tasks.common.dto.response.PageResponse;
 import ua.ivan.todo.tasks.common.exception.exceptions.ConflictException;
 import ua.ivan.todo.tasks.common.exception.exceptions.NotFoundException;
 import ua.ivan.todo.tasks.common.exception.handler.GlobalExceptionHandler;
@@ -53,34 +57,61 @@ class TaskControllerTest {
         mockMvc = MockMvcBuilders
                 .standaloneSetup(taskController)
                 .setControllerAdvice(new GlobalExceptionHandler())
+                .setCustomArgumentResolvers(new PageableHandlerMethodArgumentResolver())
                 .setValidator(validator())
                 .build();
     }
 
     @Test
-    void findAllByOwnerIdShouldReturnUserTasks() throws Exception {
-        List<TaskListItemResponse> tasks = List.of(
-                new TaskListItemResponse(1L, "First task", TaskPriority.HIGH, TaskStatus.TODO),
-                new TaskListItemResponse(2L, "Second task", TaskPriority.LOW, TaskStatus.DONE)
+    void findAllByOwnerIdShouldReturnDefaultPage() throws Exception {
+        PageResponse<TaskListItemResponse> response = new PageResponse<>(
+                List.of(
+                        new TaskListItemResponse(1L, "First task", TaskPriority.HIGH, TaskStatus.TODO),
+                        new TaskListItemResponse(2L, "Second task", TaskPriority.LOW, TaskStatus.DONE)
+                ),
+                0,
+                20,
+                2,
+                1,
+                true,
+                true
         );
 
-        when(taskService.findAllByOwnerId(1L)).thenReturn(tasks);
+        when(taskService.findAllByOwnerId(eq(1L), any(Pageable.class))).thenReturn(response);
 
         mockMvc.perform(get("/api/users/{userId}/tasks", 1L))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id").value(1))
-                .andExpect(jsonPath("$[0].name").value("First task"))
-                .andExpect(jsonPath("$[0].priority").value("HIGH"))
-                .andExpect(jsonPath("$[0].status").value("TODO"))
-                .andExpect(jsonPath("$[1].id").value(2))
-                .andExpect(jsonPath("$[1].name").value("Second task"))
-                .andExpect(jsonPath("$[1].priority").value("LOW"))
-                .andExpect(jsonPath("$[1].status").value("DONE"));
+                .andExpect(jsonPath("$.content[0].id").value(1))
+                .andExpect(jsonPath("$.content[0].name").value("First task"))
+                .andExpect(jsonPath("$.content[0].priority").value("HIGH"))
+                .andExpect(jsonPath("$.content[0].status").value("TODO"))
+                .andExpect(jsonPath("$.content[1].id").value(2))
+                .andExpect(jsonPath("$.content[1].name").value("Second task"))
+                .andExpect(jsonPath("$.content[1].priority").value("LOW"))
+                .andExpect(jsonPath("$.content[1].status").value("DONE"))
+                .andExpect(jsonPath("$.page").value(0))
+                .andExpect(jsonPath("$.size").value(20))
+                .andExpect(jsonPath("$.totalElements").value(2))
+                .andExpect(jsonPath("$.totalPages").value(1))
+                .andExpect(jsonPath("$.first").value(true))
+                .andExpect(jsonPath("$.last").value(true));
+
+        ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
+
+        verify(taskService).findAllByOwnerId(eq(1L), pageableCaptor.capture());
+
+        Pageable pageable = pageableCaptor.getValue();
+        Sort.Order order = pageable.getSort().getOrderFor("id");
+
+        assertThat(pageable.getPageNumber()).isZero();
+        assertThat(pageable.getPageSize()).isEqualTo(20);
+        assertThat(order).isNotNull();
+        assertThat(order.getDirection()).isEqualTo(Sort.Direction.ASC);
     }
 
     @Test
-    void findAllByOwnerIdShouldReturnNotFoundWhenUserDoesNotExist() throws Exception {
-        when(taskService.findAllByOwnerId(99L))
+    void findAllByOwnerIdPageableShouldReturnNotFoundWhenUserDoesNotExist() throws Exception {
+        when(taskService.findAllByOwnerId(eq(99L), any(Pageable.class)))
                 .thenThrow(new NotFoundException("User with id '99' was not found"));
 
         mockMvc.perform(get("/api/users/{userId}/tasks", 99L))
@@ -89,6 +120,100 @@ class TaskControllerTest {
                 .andExpect(jsonPath("$.error").value("Not Found"))
                 .andExpect(jsonPath("$.message").value("User with id '99' was not found"))
                 .andExpect(jsonPath("$.path").value("/api/users/99/tasks"));
+    }
+
+    @Test
+    void findAllByOwnerIdShouldUseCustomPageAndSize() throws Exception {
+        PageResponse<TaskListItemResponse> response = new PageResponse<>(
+                List.of(),
+                2,
+                3,
+                0,
+                0,
+                false,
+                true
+        );
+
+        when(taskService.findAllByOwnerId(eq(1L), any(Pageable.class))).thenReturn(response);
+
+        mockMvc.perform(get("/api/users/{userId}/tasks", 1L)
+                        .param("page", "2")
+                        .param("size", "3"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.page").value(2))
+                .andExpect(jsonPath("$.size").value(3));
+
+        ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
+
+        verify(taskService).findAllByOwnerId(eq(1L), pageableCaptor.capture());
+
+        Pageable pageable = pageableCaptor.getValue();
+
+        assertThat(pageable.getPageNumber()).isEqualTo(2);
+        assertThat(pageable.getPageSize()).isEqualTo(3);
+    }
+
+    @Test
+    void findAllByOwnerIdShouldUseValidSortField() throws Exception {
+        PageResponse<TaskListItemResponse> response = new PageResponse<>(
+                List.of(),
+                0,
+                20,
+                0,
+                0,
+                true,
+                true
+        );
+
+        when(taskService.findAllByOwnerId(eq(1L), any(Pageable.class))).thenReturn(response);
+
+        mockMvc.perform(get("/api/users/{userId}/tasks", 1L)
+                        .param("sort", "priority,desc"))
+                .andExpect(status().isOk());
+
+        ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
+
+        verify(taskService).findAllByOwnerId(eq(1L), pageableCaptor.capture());
+
+        Sort.Order order = pageableCaptor.getValue().getSort().getOrderFor("priority");
+
+        assertThat(order).isNotNull();
+        assertThat(order.getDirection()).isEqualTo(Sort.Direction.DESC);
+    }
+
+    @Test
+    void findAllByOwnerIdShouldReturnBadRequestWhenSortFieldIsInvalid() throws Exception {
+        mockMvc.perform(get("/api/users/{userId}/tasks", 1L)
+                        .param("sort", "owner,asc"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.error").value("Bad Request"))
+                .andExpect(jsonPath("$.message").value("Invalid sort field 'owner'"))
+                .andExpect(jsonPath("$.path").value("/api/users/1/tasks"));
+
+        verify(taskService, never()).findAllByOwnerId(anyLong(), any(Pageable.class));
+    }
+
+    @Test
+    void findAllByOwnerIdShouldReturnEmptyPage() throws Exception {
+        PageResponse<TaskListItemResponse> response = new PageResponse<>(
+                List.of(),
+                0,
+                20,
+                0,
+                0,
+                true,
+                true
+        );
+
+        when(taskService.findAllByOwnerId(eq(1L), any(Pageable.class))).thenReturn(response);
+
+        mockMvc.perform(get("/api/users/{userId}/tasks", 1L))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content").isArray())
+                .andExpect(jsonPath("$.content").isEmpty())
+                .andExpect(jsonPath("$.totalElements").value(0))
+                .andExpect(jsonPath("$.totalPages").value(0));
     }
 
     @Test
