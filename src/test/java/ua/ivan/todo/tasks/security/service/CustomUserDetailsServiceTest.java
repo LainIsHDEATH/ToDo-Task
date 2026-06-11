@@ -1,4 +1,4 @@
-package ua.ivan.todo.tasks.security;
+package ua.ivan.todo.tasks.security.service;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -7,7 +7,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import ua.ivan.todo.tasks.security.service.CustomUserDetailsService;
 import ua.ivan.todo.tasks.user.model.Role;
 import ua.ivan.todo.tasks.user.model.User;
 import ua.ivan.todo.tasks.user.repository.UserRepository;
