@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -53,9 +54,13 @@ public class SecurityConfig {
                 .requestMatchers("/v3/api-docs/**").permitAll()
                 .requestMatchers("/swagger-ui.html").permitAll()
 
-                .requestMatchers("/api/users/*/tasks").hasAnyRole("USER", "ADMIN")
                 .requestMatchers("/api/tasks/**").hasAnyRole("USER", "ADMIN")
-                .requestMatchers("/api/users/**").hasRole("ADMIN")
+
+                .requestMatchers(HttpMethod.GET, "/api/users").hasAnyRole("USER", "ADMIN")
+                .requestMatchers(HttpMethod.GET, "/api/users/*").hasAnyRole("USER", "ADMIN")
+                .requestMatchers("/api/users/me").hasAnyRole("USER", "ADMIN")
+
+                .requestMatchers("/api/admin/**").hasRole("ADMIN")
 
                 .anyRequest().authenticated())
             .logout(AbstractHttpConfigurer::disable)

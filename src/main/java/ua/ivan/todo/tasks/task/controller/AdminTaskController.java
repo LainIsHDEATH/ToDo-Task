@@ -6,7 +6,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import ua.ivan.todo.tasks.common.dto.response.PageResponse;
 import ua.ivan.todo.tasks.common.validation.SortValidator;
@@ -14,14 +13,14 @@ import ua.ivan.todo.tasks.task.dto.request.TaskCreateRequest;
 import ua.ivan.todo.tasks.task.dto.request.TaskUpdateRequest;
 import ua.ivan.todo.tasks.task.dto.response.TaskListItemResponse;
 import ua.ivan.todo.tasks.task.dto.response.TaskResponse;
-import ua.ivan.todo.tasks.task.service.TaskService;
+import ua.ivan.todo.tasks.task.service.AdminTaskService;
 
 import java.util.Set;
 
 @RestController
-@RequestMapping("/api/tasks")
+@RequestMapping("/api/admin")
 @RequiredArgsConstructor
-public class TaskController {
+public class AdminTaskController {
 
     private static final Set<String> ALLOWED_SORT_FIELDS = Set.of(
         "id",
@@ -29,45 +28,48 @@ public class TaskController {
         "priority",
         "status");
 
-    private final TaskService taskService;
+    private final AdminTaskService adminTaskService;
 
-    @GetMapping
-    public PageResponse<TaskListItemResponse> findCurrentUserTasks(
-        Authentication authentication,
+    @GetMapping("/tasks")
+    public PageResponse<TaskListItemResponse> findAll(
         @PageableDefault(size = 20, sort = "id", direction = Sort.Direction.ASC) Pageable pageable) {
         SortValidator.validate(pageable.getSort(), ALLOWED_SORT_FIELDS);
 
-        return taskService.findCurrentUserTasks(authentication.getName(), pageable);
+        return adminTaskService.findAll(pageable);
     }
 
-    @PostMapping
+    @GetMapping("/users/{userId}/tasks")
+    public PageResponse<TaskListItemResponse> findAllByOwnerId(
+        @PathVariable Long userId,
+        @PageableDefault(size = 20, sort = "id", direction = Sort.Direction.ASC) Pageable pageable) {
+        SortValidator.validate(pageable.getSort(), ALLOWED_SORT_FIELDS);
+
+        return adminTaskService.findAllByOwnerId(userId, pageable);
+    }
+
+    @PostMapping("/users/{userId}/tasks")
     @ResponseStatus(HttpStatus.CREATED)
     public TaskResponse create(
-        Authentication authentication,
+        @PathVariable Long userId,
         @Valid @RequestBody TaskCreateRequest request) {
-        return taskService.create(authentication.getName(), request);
+        return adminTaskService.create(userId, request);
     }
 
-    @GetMapping("/{taskId}")
-    public TaskResponse findById(
-        @PathVariable Long taskId,
-        Authentication authentication) {
-        return taskService.findById(taskId, authentication.getName());
+    @GetMapping("/tasks/{taskId}")
+    public TaskResponse findById(@PathVariable Long taskId) {
+        return adminTaskService.findById(taskId);
     }
 
-    @PutMapping("/{taskId}")
+    @PutMapping("/tasks/{taskId}")
     public TaskResponse update(
         @PathVariable Long taskId,
-        Authentication authentication,
         @Valid @RequestBody TaskUpdateRequest request) {
-        return taskService.update(taskId, authentication.getName(), request);
+        return adminTaskService.update(taskId, request);
     }
 
-    @DeleteMapping("/{taskId}")
+    @DeleteMapping("/tasks/{taskId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteById(
-        @PathVariable Long taskId,
-        Authentication authentication) {
-        taskService.deleteById(taskId, authentication.getName());
+    public void deleteById(@PathVariable Long taskId) {
+        adminTaskService.deleteById(taskId);
     }
 }

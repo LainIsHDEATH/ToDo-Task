@@ -38,7 +38,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class TaskServiceTest {
+class AdminTaskServiceTest {
 
     @Mock
     private TaskRepository taskRepository;
@@ -53,27 +53,27 @@ class TaskServiceTest {
     private DomainModelValidator validator;
 
     @InjectMocks
-    private TaskService taskService;
+    private AdminTaskService adminTaskService;
 
     @Test
-    void findCurrentUserTasksShouldReturnOnlyCurrentUserTasks() {
+    void findAllShouldReturnPagedTasks() {
         Pageable pageable = PageRequest.of(0, 20);
 
-        User currentUser = user(1L, "owner@mail.com", Role.USER);
+        User owner = user(1L, "owner@mail.com", Role.USER);
 
         Task firstTask = task(
             1L,
             "First task",
             TaskPriority.HIGH,
             TaskStatus.TODO,
-            currentUser);
+            owner);
 
         Task secondTask = task(
             2L,
             "Second task",
             TaskPriority.MEDIUM,
             TaskStatus.IN_PROGRESS,
-            currentUser);
+            owner);
 
         TaskListItemResponse firstResponse = new TaskListItemResponse(
             1L,
@@ -92,13 +92,11 @@ class TaskServiceTest {
             pageable,
             2);
 
-        when(userRepository.findByEmail("owner@mail.com")).thenReturn(Optional.of(currentUser));
-        when(taskRepository.findAllByOwnerId(1L, pageable)).thenReturn(tasksPage);
+        when(taskRepository.findAll(pageable)).thenReturn(tasksPage);
         when(taskMapper.toListItemResponse(firstTask)).thenReturn(firstResponse);
         when(taskMapper.toListItemResponse(secondTask)).thenReturn(secondResponse);
 
-        PageResponse<TaskListItemResponse> actual =
-            taskService.findCurrentUserTasks("owner@mail.com", pageable);
+        PageResponse<TaskListItemResponse> actual = adminTaskService.findAll(pageable);
 
         assertThat(actual.content()).containsExactly(firstResponse, secondResponse);
         assertThat(actual.page()).isZero();
@@ -108,27 +106,64 @@ class TaskServiceTest {
         assertThat(actual.first()).isTrue();
         assertThat(actual.last()).isTrue();
 
-        verify(userRepository).findByEmail("owner@mail.com");
+        verify(taskRepository).findAll(pageable);
+    }
+
+    @Test
+    void findAllByOwnerIdShouldReturnPagedTasksWhenOwnerExists() {
+        Pageable pageable = PageRequest.of(0, 20);
+
+        User owner = user(1L, "owner@mail.com", Role.USER);
+
+        Task task = task(
+            1L,
+            "Task",
+            TaskPriority.HIGH,
+            TaskStatus.TODO,
+            owner);
+
+        TaskListItemResponse response = new TaskListItemResponse(
+            1L,
+            "Task",
+            TaskPriority.HIGH,
+            TaskStatus.TODO);
+
+        Page<Task> tasksPage = new PageImpl<>(
+            List.of(task),
+            pageable,
+            1);
+
+        when(userRepository.existsById(1L)).thenReturn(true);
+        when(taskRepository.findAllByOwnerId(1L, pageable)).thenReturn(tasksPage);
+        when(taskMapper.toListItemResponse(task)).thenReturn(response);
+
+        PageResponse<TaskListItemResponse> actual =
+            adminTaskService.findAllByOwnerId(1L, pageable);
+
+        assertThat(actual.content()).containsExactly(response);
+        assertThat(actual.totalElements()).isEqualTo(1);
+
+        verify(userRepository).existsById(1L);
         verify(taskRepository).findAllByOwnerId(1L, pageable);
     }
 
     @Test
-    void findCurrentUserTasksShouldThrowNotFoundExceptionWhenCurrentUserDoesNotExist() {
+    void findAllByOwnerIdShouldThrowNotFoundExceptionWhenOwnerDoesNotExist() {
         Pageable pageable = PageRequest.of(0, 20);
 
-        when(userRepository.findByEmail("missing@mail.com")).thenReturn(Optional.empty());
+        when(userRepository.existsById(99L)).thenReturn(false);
 
-        assertThatThrownBy(() -> taskService.findCurrentUserTasks("missing@mail.com", pageable))
+        assertThatThrownBy(() -> adminTaskService.findAllByOwnerId(99L, pageable))
             .isInstanceOf(NotFoundException.class)
-            .hasMessage("Current user was not found");
+            .hasMessage("User with id '99' was not found");
 
-        verify(userRepository).findByEmail("missing@mail.com");
+        verify(userRepository).existsById(99L);
         verifyNoInteractions(taskRepository);
         verifyNoInteractions(taskMapper);
     }
 
     @Test
-    void findByIdShouldReturnTaskWhenCurrentUserIsOwner() {
+    void findByIdShouldReturnTaskWhenTaskExists() {
         User owner = user(1L, "owner@mail.com", Role.USER);
 
         Task task = task(
@@ -140,104 +175,31 @@ class TaskServiceTest {
 
         TaskResponse response = taskResponse(task);
 
-        when(userRepository.findByEmail("owner@mail.com")).thenReturn(Optional.of(owner));
         when(taskRepository.findById(1L)).thenReturn(Optional.of(task));
         when(taskMapper.toResponse(task)).thenReturn(response);
 
-        TaskResponse actual = taskService.findById(1L, "owner@mail.com");
+        TaskResponse actual = adminTaskService.findById(1L);
 
         assertThat(actual).isEqualTo(response);
 
-        verify(userRepository).findByEmail("owner@mail.com");
         verify(taskRepository).findById(1L);
         verify(taskMapper).toResponse(task);
     }
 
     @Test
     void findByIdShouldThrowNotFoundExceptionWhenTaskDoesNotExist() {
-        User owner = user(1L, "owner@mail.com", Role.USER);
-
-        when(userRepository.findByEmail("owner@mail.com")).thenReturn(Optional.of(owner));
         when(taskRepository.findById(99L)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> taskService.findById(99L, "owner@mail.com"))
-            .isInstanceOf(NotFoundException.class)
-            .hasMessage("Task with id '99' was not found");
+        assertThatThrownBy(() -> adminTaskService.findById(99L))
+                .isInstanceOf(NotFoundException.class)
+                .hasMessage("Task with id '99' was not found");
 
-        verify(userRepository).findByEmail("owner@mail.com");
         verify(taskRepository).findById(99L);
         verifyNoInteractions(taskMapper);
     }
 
     @Test
-    void findByIdShouldThrowNotFoundExceptionWhenTaskBelongsToAnotherUser() {
-        User currentUser = user(1L, "current@mail.com", Role.USER);
-        User anotherUser = user(2L, "another@mail.com", Role.USER);
-
-        Task task = task(
-            1L,
-            "Task",
-            TaskPriority.HIGH,
-            TaskStatus.TODO,
-            anotherUser);
-
-        when(userRepository.findByEmail("current@mail.com")).thenReturn(Optional.of(currentUser));
-        when(taskRepository.findById(1L)).thenReturn(Optional.of(task));
-
-        assertThatThrownBy(() -> taskService.findById(1L, "current@mail.com"))
-            .isInstanceOf(NotFoundException.class)
-            .hasMessage("Task with id '1' was not found");
-
-        verify(userRepository).findByEmail("current@mail.com");
-        verify(taskRepository).findById(1L);
-        verifyNoInteractions(taskMapper);
-    }
-
-    @Test
-    void createShouldCreateTaskForCurrentUserWithoutCollaborators() {
-        User owner = user(1L, "owner@mail.com", Role.USER);
-
-        TaskCreateRequest request = new TaskCreateRequest(
-            "New task",
-            TaskPriority.HIGH,
-            null);
-
-        Task task = Task.builder()
-            .name("New task")
-            .priority(TaskPriority.HIGH)
-            .build();
-
-        Task savedTask = task(
-            1L,
-            "New task",
-            TaskPriority.HIGH,
-            TaskStatus.TODO,
-            owner);
-
-        TaskResponse response = taskResponse(savedTask);
-
-        when(userRepository.findByEmail("owner@mail.com")).thenReturn(Optional.of(owner));
-        when(taskMapper.toEntity(request)).thenReturn(task);
-        when(validator.validate(task)).thenReturn(task);
-        when(taskRepository.save(task)).thenReturn(savedTask);
-        when(taskMapper.toResponse(savedTask)).thenReturn(response);
-
-        TaskResponse actual = taskService.create("owner@mail.com", request);
-
-        assertThat(actual).isEqualTo(response);
-        assertThat(task.getOwner()).isEqualTo(owner);
-        assertThat(task.getStatus()).isEqualTo(TaskStatus.TODO);
-        assertThat(task.getCollaborators()).isEmpty();
-
-        verify(userRepository).findByEmail("owner@mail.com");
-        verify(taskMapper).toEntity(request);
-        verify(validator).validate(task);
-        verify(taskRepository).save(task);
-        verify(taskMapper).toResponse(savedTask);
-    }
-
-    @Test
-    void createShouldCreateTaskForCurrentUserWithCollaborators() {
+    void createShouldCreateTaskForOwner() {
         User owner = user(1L, "owner@mail.com", Role.USER);
         User collaborator = user(2L, "collaborator@mail.com", Role.USER);
 
@@ -262,22 +224,41 @@ class TaskServiceTest {
 
         TaskResponse response = taskResponse(savedTask);
 
-        when(userRepository.findByEmail("owner@mail.com")).thenReturn(Optional.of(owner));
+        when(userRepository.findById(1L)).thenReturn(Optional.of(owner));
         when(taskMapper.toEntity(request)).thenReturn(task);
         when(userRepository.findAllById(Set.of(2L))).thenReturn(List.of(collaborator));
         when(validator.validate(task)).thenReturn(task);
         when(taskRepository.save(task)).thenReturn(savedTask);
         when(taskMapper.toResponse(savedTask)).thenReturn(response);
 
-        TaskResponse actual = taskService.create("owner@mail.com", request);
+        TaskResponse actual = adminTaskService.create(1L, request);
 
         assertThat(actual).isEqualTo(response);
         assertThat(task.getOwner()).isEqualTo(owner);
         assertThat(task.getStatus()).isEqualTo(TaskStatus.TODO);
         assertThat(task.getCollaborators()).containsExactly(collaborator);
 
-        verify(userRepository).findAllById(Set.of(2L));
+        verify(userRepository).findById(1L);
         verify(taskRepository).save(task);
+    }
+
+    @Test
+    void createShouldThrowNotFoundExceptionWhenOwnerDoesNotExist() {
+        TaskCreateRequest request = new TaskCreateRequest(
+            "New task",
+            TaskPriority.HIGH,
+            Set.of());
+
+        when(userRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> adminTaskService.create(99L, request))
+            .isInstanceOf(NotFoundException.class)
+            .hasMessage("User with id '99' was not found");
+
+        verify(userRepository).findById(99L);
+        verifyNoInteractions(taskRepository);
+        verifyNoInteractions(taskMapper);
+        verifyNoInteractions(validator);
     }
 
     @Test
@@ -294,50 +275,21 @@ class TaskServiceTest {
             .priority(TaskPriority.HIGH)
             .build();
 
-        when(userRepository.findByEmail("owner@mail.com")).thenReturn(Optional.of(owner));
+        when(userRepository.findById(1L)).thenReturn(Optional.of(owner));
         when(taskMapper.toEntity(request)).thenReturn(task);
 
-        assertThatThrownBy(() -> taskService.create("owner@mail.com", request))
+        assertThatThrownBy(() -> adminTaskService.create(1L, request))
             .isInstanceOf(ConflictException.class)
             .hasMessage("Task owner cannot be added as collaborator");
 
-        verify(userRepository).findByEmail("owner@mail.com");
-        verify(taskMapper).toEntity(request);
+        verify(userRepository).findById(1L);
         verify(userRepository, never()).findAllById(any());
         verify(taskRepository, never()).save(any());
         verifyNoInteractions(validator);
     }
 
     @Test
-    void createShouldThrowNotFoundExceptionWhenSomeCollaboratorsDoNotExist() {
-        User owner = user(1L, "owner@mail.com", Role.USER);
-        User collaborator = user(2L, "collaborator@mail.com", Role.USER);
-
-        TaskCreateRequest request = new TaskCreateRequest(
-            "New task",
-            TaskPriority.HIGH,
-            Set.of(2L, 3L));
-
-        Task task = Task.builder()
-            .name("New task")
-            .priority(TaskPriority.HIGH)
-            .build();
-
-        when(userRepository.findByEmail("owner@mail.com")).thenReturn(Optional.of(owner));
-        when(taskMapper.toEntity(request)).thenReturn(task);
-        when(userRepository.findAllById(Set.of(2L, 3L))).thenReturn(List.of(collaborator));
-
-        assertThatThrownBy(() -> taskService.create("owner@mail.com", request))
-            .isInstanceOf(NotFoundException.class)
-            .hasMessage("Users with ids [3] were not found");
-
-        verify(userRepository).findAllById(Set.of(2L, 3L));
-        verify(taskRepository, never()).save(any());
-        verifyNoInteractions(validator);
-    }
-
-    @Test
-    void updateShouldUpdateOwnedTask() {
+    void updateShouldUpdateExistingTask() {
         User owner = user(1L, "owner@mail.com", Role.USER);
         User collaborator = user(2L, "collaborator@mail.com", Role.USER);
 
@@ -351,100 +303,98 @@ class TaskServiceTest {
         TaskUpdateRequest request = new TaskUpdateRequest(
             "Updated task",
             TaskPriority.HIGH,
-            TaskStatus.IN_PROGRESS,
+            TaskStatus.DONE,
             Set.of(2L));
 
         TaskResponse response = taskResponse(task);
 
-        when(userRepository.findByEmail("owner@mail.com")).thenReturn(Optional.of(owner));
         when(taskRepository.findById(1L)).thenReturn(Optional.of(task));
         when(userRepository.findAllById(Set.of(2L))).thenReturn(List.of(collaborator));
         when(validator.validate(task)).thenReturn(task);
         when(taskRepository.save(task)).thenReturn(task);
         when(taskMapper.toResponse(task)).thenReturn(response);
 
-        TaskResponse actual = taskService.update(1L, "owner@mail.com", request);
+        TaskResponse actual = adminTaskService.update(1L, request);
 
         assertThat(actual).isEqualTo(response);
         assertThat(task.getName()).isEqualTo("Updated task");
         assertThat(task.getPriority()).isEqualTo(TaskPriority.HIGH);
-        assertThat(task.getStatus()).isEqualTo(TaskStatus.IN_PROGRESS);
+        assertThat(task.getStatus()).isEqualTo(TaskStatus.DONE);
         assertThat(task.getCollaborators()).containsExactly(collaborator);
 
+        verify(taskRepository).findById(1L);
         verify(taskRepository).save(task);
     }
 
     @Test
-    void updateShouldThrowNotFoundExceptionWhenTaskBelongsToAnotherUser() {
-        User currentUser = user(1L, "current@mail.com", Role.USER);
-        User anotherUser = user(2L, "another@mail.com", Role.USER);
-
-        Task task = task(
-            1L,
-            "Task",
-            TaskPriority.LOW,
-            TaskStatus.TODO,
-            anotherUser);
-
+    void updateShouldThrowNotFoundExceptionWhenTaskDoesNotExist() {
         TaskUpdateRequest request = new TaskUpdateRequest(
             "Updated task",
             TaskPriority.HIGH,
-            TaskStatus.IN_PROGRESS,
+            TaskStatus.DONE,
             Set.of());
 
-        when(userRepository.findByEmail("current@mail.com")).thenReturn(Optional.of(currentUser));
-        when(taskRepository.findById(1L)).thenReturn(Optional.of(task));
+        when(taskRepository.findById(99L)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> taskService.update(1L, "current@mail.com", request))
+        assertThatThrownBy(() -> adminTaskService.update(99L, request))
             .isInstanceOf(NotFoundException.class)
-            .hasMessage("Task with id '1' was not found");
+            .hasMessage("Task with id '99' was not found");
 
+        verify(taskRepository).findById(99L);
         verify(taskRepository, never()).save(any());
         verifyNoInteractions(validator);
         verifyNoInteractions(taskMapper);
     }
 
     @Test
-    void deleteByIdShouldDeleteOwnedTask() {
+    void updateShouldThrowConflictExceptionWhenOwnerIsCollaborator() {
         User owner = user(1L, "owner@mail.com", Role.USER);
 
         Task task = task(
             1L,
             "Task",
-            TaskPriority.HIGH,
+            TaskPriority.LOW,
             TaskStatus.TODO,
             owner);
 
-        when(userRepository.findByEmail("owner@mail.com")).thenReturn(Optional.of(owner));
+        TaskUpdateRequest request = new TaskUpdateRequest(
+            "Updated task",
+            TaskPriority.HIGH,
+            TaskStatus.DONE,
+            Set.of(1L));
+
         when(taskRepository.findById(1L)).thenReturn(Optional.of(task));
 
-        taskService.deleteById(1L, "owner@mail.com");
+        assertThatThrownBy(() -> adminTaskService.update(1L, request))
+            .isInstanceOf(ConflictException.class)
+            .hasMessage("Task owner cannot be added as collaborator");
 
-        verify(userRepository).findByEmail("owner@mail.com");
         verify(taskRepository).findById(1L);
-        verify(taskRepository).delete(task);
+        verify(userRepository, never()).findAllById(any());
+        verify(taskRepository, never()).save(any());
+        verifyNoInteractions(validator);
     }
 
     @Test
-    void deleteByIdShouldThrowNotFoundExceptionWhenTaskBelongsToAnotherUser() {
-        User currentUser = user(1L, "current@mail.com", Role.USER);
-        User anotherUser = user(2L, "another@mail.com", Role.USER);
+    void deleteByIdShouldDeleteTaskWhenTaskExists() {
+        when(taskRepository.existsById(1L)).thenReturn(true);
 
-        Task task = task(
-            1L,
-            "Task",
-            TaskPriority.HIGH,
-            TaskStatus.TODO,
-            anotherUser);
+        adminTaskService.deleteById(1L);
 
-        when(userRepository.findByEmail("current@mail.com")).thenReturn(Optional.of(currentUser));
-        when(taskRepository.findById(1L)).thenReturn(Optional.of(task));
+        verify(taskRepository).existsById(1L);
+        verify(taskRepository).deleteById(1L);
+    }
 
-        assertThatThrownBy(() -> taskService.deleteById(1L, "current@mail.com"))
-            .isInstanceOf(NotFoundException.class)
-            .hasMessage("Task with id '1' was not found");
+    @Test
+    void deleteByIdShouldThrowNotFoundExceptionWhenTaskDoesNotExist() {
+        when(taskRepository.existsById(99L)).thenReturn(false);
 
-        verify(taskRepository, never()).delete(any());
+        assertThatThrownBy(() -> adminTaskService.deleteById(99L))
+                .isInstanceOf(NotFoundException.class)
+                .hasMessage("Task with id '99' was not found");
+
+        verify(taskRepository).existsById(99L);
+        verify(taskRepository, never()).deleteById(any());
     }
 
     private static User user(Long id, String email, Role role) {

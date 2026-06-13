@@ -14,9 +14,10 @@ import ua.ivan.todo.tasks.common.dto.response.PageResponse;
 import ua.ivan.todo.tasks.common.exception.exceptions.ConflictException;
 import ua.ivan.todo.tasks.common.exception.exceptions.NotFoundException;
 import ua.ivan.todo.tasks.common.validation.DomainModelValidator;
+import ua.ivan.todo.tasks.user.dto.request.UserProfileUpdateRequest;
 import ua.ivan.todo.tasks.user.dto.request.UserRegistrationRequest;
-import ua.ivan.todo.tasks.user.dto.request.UserUpdateRequest;
 import ua.ivan.todo.tasks.user.dto.response.UserResponse;
+import ua.ivan.todo.tasks.user.dto.response.UserShortResponse;
 import ua.ivan.todo.tasks.user.mapper.UserMapper;
 import ua.ivan.todo.tasks.user.model.Role;
 import ua.ivan.todo.tasks.user.model.User;
@@ -35,10 +36,13 @@ class UserServiceTest {
 
     @Mock
     private UserRepository userRepository;
+
     @Mock
     private UserMapper userMapper;
+
     @Mock
     private PasswordEncoder passwordEncoder;
+
     @Mock
     private DomainModelValidator validator;
 
@@ -85,12 +89,15 @@ class UserServiceTest {
         UserResponse actual = userService.register(request);
 
         assertThat(actual).isEqualTo(response);
-
         assertThat(user.getPasswordHash()).isEqualTo("encoded-password");
         assertThat(user.getRole()).isEqualTo(Role.USER);
 
-        verify(userRepository).save(user);
+        verify(userRepository).existsByEmail("nick@mail.com");
+        verify(userMapper).toEntity(request);
         verify(passwordEncoder).encode("password123");
+        verify(validator).validate(user);
+        verify(userRepository).save(user);
+        verify(userMapper).toResponse(savedUser);
     }
 
     @Test
@@ -107,44 +114,15 @@ class UserServiceTest {
             .isInstanceOf(ConflictException.class)
             .hasMessage("User with email 'nick@mail.com' already exists");
 
+        verify(userRepository).existsByEmail("nick@mail.com");
         verify(userRepository, never()).save(any());
         verify(passwordEncoder, never()).encode(any());
+        verifyNoInteractions(userMapper);
+        verifyNoInteractions(validator);
     }
 
     @Test
-    void findAllShouldReturnAllUsers() {
-        User firstUser = User.builder()
-            .id(1L)
-            .firstName("Nick")
-            .lastName("Green")
-            .email("nick@mail.com")
-            .passwordHash("hash")
-            .role(Role.USER)
-            .build();
-
-        User secondUser = User.builder()
-            .id(2L)
-            .firstName("Nora")
-            .lastName("White")
-            .email("nora@mail.com")
-            .passwordHash("hash")
-            .role(Role.ADMIN)
-            .build();
-
-        UserResponse firstResponse = new UserResponse(1L, "Nick", "Green", "nick@mail.com", Role.USER);
-        UserResponse secondResponse = new UserResponse(2L, "Nora", "White", "nora@mail.com", Role.ADMIN);
-
-        when(userRepository.findAll()).thenReturn(List.of(firstUser, secondUser));
-        when(userMapper.toResponse(firstUser)).thenReturn(firstResponse);
-        when(userMapper.toResponse(secondUser)).thenReturn(secondResponse);
-
-        List<UserResponse> actual = userService.findAll();
-
-        assertThat(actual).containsExactly(firstResponse, secondResponse);
-    }
-
-    @Test
-    void findAllShouldReturnPagedUsers() {
+    void findAllShortShouldReturnPagedUsers() {
         Pageable pageable = PageRequest.of(0, 20);
 
         User firstUser = User.builder()
@@ -165,8 +143,17 @@ class UserServiceTest {
             .role(Role.ADMIN)
             .build();
 
-        UserResponse firstResponse = new UserResponse(1L, "Nick", "Green", "nick@mail.com", Role.USER);
-        UserResponse secondResponse = new UserResponse(2L, "Nora", "White", "nora@mail.com", Role.ADMIN);
+        UserShortResponse firstResponse = new UserShortResponse(
+            1L,
+            "Nick",
+            "Green",
+            "nick@mail.com");
+
+        UserShortResponse secondResponse = new UserShortResponse(
+            2L,
+            "Nora",
+            "White",
+            "nora@mail.com");
 
         Page<User> usersPage = new PageImpl<>(
             List.of(firstUser, secondUser),
@@ -174,10 +161,10 @@ class UserServiceTest {
             2);
 
         when(userRepository.findAll(pageable)).thenReturn(usersPage);
-        when(userMapper.toResponse(firstUser)).thenReturn(firstResponse);
-        when(userMapper.toResponse(secondUser)).thenReturn(secondResponse);
+        when(userMapper.toShortResponse(firstUser)).thenReturn(firstResponse);
+        when(userMapper.toShortResponse(secondUser)).thenReturn(secondResponse);
 
-        PageResponse<UserResponse> actual = userService.findAll(pageable);
+        PageResponse<UserShortResponse> actual = userService.findAllShort(pageable);
 
         assertThat(actual.content()).containsExactly(firstResponse, secondResponse);
         assertThat(actual.page()).isZero();
@@ -188,10 +175,12 @@ class UserServiceTest {
         assertThat(actual.last()).isTrue();
 
         verify(userRepository).findAll(pageable);
+        verify(userMapper).toShortResponse(firstUser);
+        verify(userMapper).toShortResponse(secondUser);
     }
 
     @Test
-    void findByIdShouldReturnUserWhenUserExists() {
+    void findShortByIdShouldReturnUserWhenUserExists() {
         User user = User.builder()
             .id(1L)
             .firstName("Nick")
@@ -201,27 +190,78 @@ class UserServiceTest {
             .role(Role.USER)
             .build();
 
-        UserResponse response = new UserResponse(1L, "Nick", "Green", "nick@mail.com", Role.USER);
+        UserShortResponse response = new UserShortResponse(
+            1L,
+            "Nick",
+            "Green",
+            "nick@mail.com");
 
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
-        when(userMapper.toResponse(user)).thenReturn(response);
+        when(userMapper.toShortResponse(user)).thenReturn(response);
 
-        UserResponse actual = userService.findById(1L);
+        UserShortResponse actual = userService.findShortById(1L);
 
         assertThat(actual).isEqualTo(response);
+
+        verify(userRepository).findById(1L);
+        verify(userMapper).toShortResponse(user);
     }
 
     @Test
-    void findByIdShouldThrowNotFoundExceptionWhenUserDoesNotExist() {
+    void findShortByIdShouldThrowNotFoundExceptionWhenUserDoesNotExist() {
         when(userRepository.findById(99L)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> userService.findById(99L))
+        assertThatThrownBy(() -> userService.findShortById(99L))
                 .isInstanceOf(NotFoundException.class)
                 .hasMessage("User with id '99' was not found");
+
+        verify(userRepository).findById(99L);
+        verifyNoInteractions(userMapper);
     }
 
     @Test
-    void updateShouldUpdateExistingUser() {
+    void findCurrentUserShouldReturnCurrentUser() {
+        User user = User.builder()
+            .id(1L)
+            .firstName("Nick")
+            .lastName("Green")
+            .email("nick@mail.com")
+            .passwordHash("hash")
+            .role(Role.USER)
+            .build();
+
+        UserResponse response = new UserResponse(
+            1L,
+            "Nick",
+            "Green",
+            "nick@mail.com",
+            Role.USER);
+
+        when(userRepository.findByEmail("nick@mail.com")).thenReturn(Optional.of(user));
+        when(userMapper.toResponse(user)).thenReturn(response);
+
+        UserResponse actual = userService.findCurrentUser("nick@mail.com");
+
+        assertThat(actual).isEqualTo(response);
+
+        verify(userRepository).findByEmail("nick@mail.com");
+        verify(userMapper).toResponse(user);
+    }
+
+    @Test
+    void findCurrentUserShouldThrowNotFoundExceptionWhenCurrentUserDoesNotExist() {
+        when(userRepository.findByEmail("missing@mail.com")).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> userService.findCurrentUser("missing@mail.com"))
+                .isInstanceOf(NotFoundException.class)
+                .hasMessage("Current user was not found");
+
+        verify(userRepository).findByEmail("missing@mail.com");
+        verifyNoInteractions(userMapper);
+    }
+
+    @Test
+    void updateCurrentUserShouldUpdateCurrentUserProfile() {
         User user = User.builder()
             .id(1L)
             .firstName("Old")
@@ -231,38 +271,41 @@ class UserServiceTest {
             .role(Role.USER)
             .build();
 
-        UserUpdateRequest request = new UserUpdateRequest(
+        UserProfileUpdateRequest request = new UserProfileUpdateRequest(
             "New",
             "User",
-            "new@mail.com",
-            Role.ADMIN);
+            "new@mail.com");
 
         UserResponse response = new UserResponse(
             1L,
             "New",
             "User",
             "new@mail.com",
-            Role.ADMIN);
+            Role.USER);
 
-        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(userRepository.findByEmail("old@mail.com")).thenReturn(Optional.of(user));
         when(userRepository.findByEmail("new@mail.com")).thenReturn(Optional.empty());
         when(validator.validate(user)).thenReturn(user);
         when(userRepository.save(user)).thenReturn(user);
         when(userMapper.toResponse(user)).thenReturn(response);
 
-        UserResponse actual = userService.update(1L, request);
+        UserResponse actual = userService.updateCurrentUser("old@mail.com", request);
 
         assertThat(actual).isEqualTo(response);
         assertThat(user.getFirstName()).isEqualTo("New");
         assertThat(user.getLastName()).isEqualTo("User");
         assertThat(user.getEmail()).isEqualTo("new@mail.com");
-        assertThat(user.getRole()).isEqualTo(Role.ADMIN);
+        assertThat(user.getRole()).isEqualTo(Role.USER);
 
+        verify(userRepository).findByEmail("old@mail.com");
+        verify(userRepository).findByEmail("new@mail.com");
+        verify(validator).validate(user);
         verify(userRepository).save(user);
+        verify(userMapper).toResponse(user);
     }
 
     @Test
-    void updateShouldAllowKeepingSameEmail() {
+    void updateCurrentUserShouldAllowKeepingSameEmail() {
         User user = User.builder()
             .id(1L)
             .firstName("Nick")
@@ -272,11 +315,10 @@ class UserServiceTest {
             .role(Role.USER)
             .build();
 
-        UserUpdateRequest request = new UserUpdateRequest(
+        UserProfileUpdateRequest request = new UserProfileUpdateRequest(
             "Nick",
             "Green",
-            "nick@mail.com",
-            Role.USER);
+            "nick@mail.com");
 
         UserResponse response = new UserResponse(
             1L,
@@ -285,19 +327,23 @@ class UserServiceTest {
             "nick@mail.com",
             Role.USER);
 
-        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(userRepository.findByEmail("nick@mail.com")).thenReturn(Optional.of(user));
         when(validator.validate(user)).thenReturn(user);
         when(userRepository.save(user)).thenReturn(user);
         when(userMapper.toResponse(user)).thenReturn(response);
 
-        UserResponse actual = userService.update(1L, request);
+        UserResponse actual = userService.updateCurrentUser("nick@mail.com", request);
 
         assertThat(actual).isEqualTo(response);
+        assertThat(user.getEmail()).isEqualTo("nick@mail.com");
+        assertThat(user.getRole()).isEqualTo(Role.USER);
+
+        verify(userRepository, times(2)).findByEmail("nick@mail.com");
+        verify(userRepository).save(user);
     }
 
     @Test
-    void updateShouldThrowConflictExceptionWhenEmailBelongsToAnotherUser() {
+    void updateCurrentUserShouldThrowConflictExceptionWhenEmailBelongsToAnotherUser() {
         User currentUser = User.builder()
             .id(1L)
             .firstName("Nick")
@@ -316,52 +362,72 @@ class UserServiceTest {
             .role(Role.USER)
             .build();
 
-        UserUpdateRequest request = new UserUpdateRequest(
+        UserProfileUpdateRequest request = new UserProfileUpdateRequest(
             "Nick",
             "Green",
-            "nora@mail.com",
-            Role.USER);
+            "nora@mail.com");
 
-        when(userRepository.findById(1L)).thenReturn(Optional.of(currentUser));
+        when(userRepository.findByEmail("nick@mail.com")).thenReturn(Optional.of(currentUser));
         when(userRepository.findByEmail("nora@mail.com")).thenReturn(Optional.of(anotherUser));
 
-        assertThatThrownBy(() -> userService.update(1L, request))
+        assertThatThrownBy(() -> userService.updateCurrentUser("nick@mail.com", request))
             .isInstanceOf(ConflictException.class)
             .hasMessage("User with email 'nora@mail.com' already exists");
+
+        verify(userRepository).findByEmail("nick@mail.com");
+        verify(userRepository).findByEmail("nora@mail.com");
+        verify(userRepository, never()).save(any());
+        verifyNoInteractions(validator);
+        verifyNoMoreInteractions(userMapper);
     }
 
     @Test
-    void updateShouldThrowNotFoundExceptionWhenUserDoesNotExist() {
-        UserUpdateRequest request = new UserUpdateRequest(
+    void updateCurrentUserShouldThrowNotFoundExceptionWhenCurrentUserDoesNotExist() {
+        UserProfileUpdateRequest request = new UserProfileUpdateRequest(
             "Nick",
             "Green",
-            "nick@mail.com",
-            Role.USER);
+            "nick@mail.com");
 
-        when(userRepository.findById(99L)).thenReturn(Optional.empty());
+        when(userRepository.findByEmail("missing@mail.com")).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> userService.update(99L, request))
+        assertThatThrownBy(() -> userService.updateCurrentUser("missing@mail.com", request))
             .isInstanceOf(NotFoundException.class)
-            .hasMessage("User with id '99' was not found");
+            .hasMessage("Current user was not found");
+
+        verify(userRepository).findByEmail("missing@mail.com");
+        verify(userRepository, never()).save(any());
+        verifyNoInteractions(validator);
+        verifyNoInteractions(userMapper);
     }
 
     @Test
-    void deleteByIdShouldDeleteUserWhenUserExistsAndDoesNotOwnTasks() {
-        when(userRepository.existsById(1L)).thenReturn(true);
+    void deleteCurrentUserShouldDeleteCurrentUser() {
+        User user = User.builder()
+            .id(1L)
+            .firstName("Nick")
+            .lastName("Green")
+            .email("nick@mail.com")
+            .passwordHash("hash")
+            .role(Role.USER)
+            .build();
 
-        userService.deleteById(1L);
+        when(userRepository.findByEmail("nick@mail.com")).thenReturn(Optional.of(user));
 
-        verify(userRepository).deleteById(1L);
+        userService.deleteCurrentUser("nick@mail.com");
+
+        verify(userRepository).findByEmail("nick@mail.com");
+        verify(userRepository).delete(user);
     }
 
     @Test
-    void deleteByIdShouldThrowNotFoundExceptionWhenUserDoesNotExist() {
-        when(userRepository.existsById(99L)).thenReturn(false);
+    void deleteCurrentUserShouldThrowNotFoundExceptionWhenCurrentUserDoesNotExist() {
+        when(userRepository.findByEmail("missing@mail.com")).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> userService.deleteById(99L))
+        assertThatThrownBy(() -> userService.deleteCurrentUser("missing@mail.com"))
                 .isInstanceOf(NotFoundException.class)
-                .hasMessage("User with id '99' was not found");
+                .hasMessage("Current user was not found");
 
-        verify(userRepository, never()).deleteById(any());
+        verify(userRepository).findByEmail("missing@mail.com");
+        verify(userRepository, never()).delete(any());
     }
 }
