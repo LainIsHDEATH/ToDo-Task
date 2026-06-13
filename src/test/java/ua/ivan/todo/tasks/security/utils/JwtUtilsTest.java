@@ -1,5 +1,6 @@
 package ua.ivan.todo.tasks.security.utils;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -13,9 +14,9 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.Instant;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -33,6 +34,11 @@ class JwtUtilsTest {
 
     @InjectMocks
     private JwtUtils jwtUtils;
+
+    @BeforeEach
+    void setUp() {
+        ReflectionTestUtils.setField(jwtUtils, "expirationMinutes", 60L);
+    }
 
     @Test
     void generateTokenShouldReturnEncodedToken() {
@@ -84,14 +90,16 @@ class JwtUtilsTest {
         JwtEncoderParameters parameters = parametersCaptor.getValue();
 
         assertThat(parameters.getClaims().getSubject()).isEqualTo("admin@mail.com");
-        assertThat(Collections.singletonList(parameters.getClaims().getClaim("authorities")))
-            .isEqualTo(List.of("ROLE_ADMIN"));
+        assertThat(parameters.getClaims().getClaimAsStringList("authorities")).containsExactly("ROLE_ADMIN");
         assertThat(parameters.getClaims().getExpiresAt()).isAfter(Instant.now());
     }
 
     @Test
     void extractUsernameShouldReturnJwtSubject() {
-        Jwt jwt = jwt("token", "user@mail.com", Instant.now().plusSeconds(3600));
+        Jwt jwt = jwt("token",
+                "user@mail.com",
+                Instant.now(),
+                Instant.now().plusSeconds(3600));
 
         when(jwtDecoder.decode("token")).thenReturn(jwt);
 
@@ -108,7 +116,10 @@ class JwtUtilsTest {
             .authorities(List.of(new SimpleGrantedAuthority("ROLE_USER")))
             .build();
 
-        Jwt jwt = jwt("token", "user@mail.com", Instant.now().plusSeconds(3600));
+        Jwt jwt = jwt("token",
+                "user@mail.com",
+                Instant.now(),
+                Instant.now().plusSeconds(3600));
 
         when(jwtDecoder.decode("token")).thenReturn(jwt);
 
@@ -125,7 +136,10 @@ class JwtUtilsTest {
             .authorities(List.of(new SimpleGrantedAuthority("ROLE_USER")))
             .build();
 
-        Jwt jwt = jwt("token", "user@mail.com", Instant.now().minusSeconds(60));
+        Jwt jwt = jwt("token",
+                "user@mail.com",
+                Instant.now().minusSeconds(3600),
+                Instant.now().minusSeconds(60));
 
         when(jwtDecoder.decode("token")).thenReturn(jwt);
 
@@ -141,10 +155,10 @@ class JwtUtilsTest {
         assertThat(actual).isEqualTo(3600);
     }
 
-    private Jwt jwt(String token, String subject, Instant expiresAt) {
+    private Jwt jwt(String token, String subject, Instant issuedAt, Instant expiresAt) {
         return new Jwt(
             token,
-            Instant.now(),
+            issuedAt,
             expiresAt,
             Map.of("alg", "HS256"),
             Map.of("sub", subject));
