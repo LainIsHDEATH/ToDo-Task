@@ -25,20 +25,20 @@ public class JwtUtils {
         Instant expiresAt = now.plus(Duration.ofMinutes(expirationMinutes));
 
         JwtClaimsSet claims = JwtClaimsSet.builder()
-                .subject(userDetails.getUsername())
-                .issuedAt(now)
-                .expiresAt(expiresAt)
-                .claim("authorities",
-                        userDetails.getAuthorities()
-                                .stream()
-                                .map(Object::toString)
-                                .toList())
-                .build();
+            .subject(userDetails.getUsername())
+            .issuedAt(now)
+            .expiresAt(expiresAt)
+            .claim("authorities",
+                userDetails.getAuthorities()
+                    .stream()
+                    .map(Object::toString)
+                    .toList())
+            .build();
 
         JwsHeader header = JwsHeader.with(MacAlgorithm.HS256).build();
 
         return jwtEncoder.encode(JwtEncoderParameters.from(header, claims))
-                .getTokenValue();
+            .getTokenValue();
     }
 
     public String extractUsername(String token) {
@@ -56,8 +56,8 @@ public class JwtUtils {
         Instant expiresAt = jwt.getExpiresAt();
 
         return username.equals(userDetails.getUsername())
-                && expiresAt != null
-                && expiresAt.isAfter(Instant.now());
+            && expiresAt != null
+            && expiresAt.isAfter(Instant.now());
     }
 
     public long getExpirationSeconds() {
