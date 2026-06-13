@@ -12,10 +12,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import ua.ivan.todo.tasks.common.exception.ErrorResponse;
 import ua.ivan.todo.tasks.common.exception.FieldValidationError;
-import ua.ivan.todo.tasks.common.exception.exceptions.BadRequestException;
-import ua.ivan.todo.tasks.common.exception.exceptions.ConflictException;
-import ua.ivan.todo.tasks.common.exception.exceptions.DeleteConflictException;
-import ua.ivan.todo.tasks.common.exception.exceptions.NotFoundException;
+import ua.ivan.todo.tasks.common.exception.exceptions.*;
 
 import java.util.List;
 
@@ -80,6 +77,17 @@ public class GlobalExceptionHandler {
         HttpServletRequest request) {
         return ErrorResponse.of(
             HttpStatus.BAD_REQUEST,
+            exception.getMessage(),
+            request.getRequestURI());
+    }
+
+    @ExceptionHandler(AuthenticationException.class)
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    public ErrorResponse handleAuthentication(
+        AuthenticationException exception,
+        HttpServletRequest request) {
+        return ErrorResponse.of(
+            HttpStatus.UNAUTHORIZED,
             exception.getMessage(),
             request.getRequestURI());
     }

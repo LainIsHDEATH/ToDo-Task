@@ -14,5 +14,8 @@ spring:
     enabled: false
 
 security:
+  jwt:
+    secret: MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=
+    expiration-minutes: 60
   cors:
     allowed-origins: http://localhost:3000,http://localhost:5173
