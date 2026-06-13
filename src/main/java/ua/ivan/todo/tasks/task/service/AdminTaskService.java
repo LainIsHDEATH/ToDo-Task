@@ -17,8 +17,8 @@ import ua.ivan.todo.tasks.task.mapper.TaskMapper;
 import ua.ivan.todo.tasks.task.model.Task;
 import ua.ivan.todo.tasks.task.model.TaskStatus;
 import ua.ivan.todo.tasks.task.repository.TaskRepository;
+import ua.ivan.todo.tasks.user.api.interfaces.UserReadFacade;
 import ua.ivan.todo.tasks.user.model.User;
-import ua.ivan.todo.tasks.user.repository.UserRepository;
 
 import java.util.HashSet;
 import java.util.List;
@@ -36,7 +36,7 @@ public class AdminTaskService {
     private static final String OWNER_AS_COLLABORATOR_MESSAGE = "Task owner cannot be added as collaborator";
 
     private final TaskRepository taskRepository;
-    private final UserRepository userRepository;
+    private final UserReadFacade userReadFacade;
     private final TaskMapper taskMapper;
     private final DomainModelValidator validator;
 
@@ -131,12 +131,12 @@ public class AdminTaskService {
     }
 
     private User getUserOrThrow(Long userId) {
-        return userRepository.findById(userId)
+        return userReadFacade.findById(userId)
             .orElseThrow(() -> new NotFoundException(USER_NOT_FOUND_MESSAGE.formatted(userId)));
     }
 
     private void ensureUserExists(Long userId) {
-        if (!userRepository.existsById(userId)) {
+        if (!userReadFacade.existsById(userId)) {
             throw new NotFoundException(USER_NOT_FOUND_MESSAGE.formatted(userId));
         }
     }
@@ -152,7 +152,7 @@ public class AdminTaskService {
             throw new ConflictException(OWNER_AS_COLLABORATOR_MESSAGE);
         }
 
-        List<User> collaborators = userRepository.findAllById(normalizedCollaboratorIds);
+        List<User> collaborators = userReadFacade.findAllByIds(normalizedCollaboratorIds);
 
         if (collaborators.size() != normalizedCollaboratorIds.size()) {
             Set<Long> foundIds = collaborators.stream()

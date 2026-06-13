@@ -17,8 +17,8 @@ import ua.ivan.todo.tasks.task.mapper.TaskMapper;
 import ua.ivan.todo.tasks.task.model.Task;
 import ua.ivan.todo.tasks.task.model.TaskStatus;
 import ua.ivan.todo.tasks.task.repository.TaskRepository;
+import ua.ivan.todo.tasks.user.api.interfaces.UserReadFacade;
 import ua.ivan.todo.tasks.user.model.User;
-import ua.ivan.todo.tasks.user.repository.UserRepository;
 
 import java.util.HashSet;
 import java.util.List;
@@ -36,7 +36,7 @@ public class TaskService {
     private static final String OWNER_AS_COLLABORATOR_MESSAGE = "Task owner cannot be added as collaborator";
 
     private final TaskRepository taskRepository;
-    private final UserRepository userRepository;
+    private final UserReadFacade userReadFacade;
     private final TaskMapper taskMapper;
     private final DomainModelValidator validator;
 
@@ -130,7 +130,7 @@ public class TaskService {
     }
 
     private User getCurrentUserOrThrow(String email) {
-        return userRepository.findByEmail(email)
+        return userReadFacade.findByEmail(email)
             .orElseThrow(() -> new NotFoundException(CURRENT_USER_NOT_FOUND_MESSAGE));
     }
 
@@ -145,7 +145,7 @@ public class TaskService {
             throw new ConflictException(OWNER_AS_COLLABORATOR_MESSAGE);
         }
 
-        List<User> collaborators = userRepository.findAllById(normalizedCollaboratorIds);
+        List<User> collaborators = userReadFacade.findAllByIds(normalizedCollaboratorIds);
 
         if (collaborators.size() != normalizedCollaboratorIds.size()) {
             Set<Long> foundIds = collaborators.stream()
