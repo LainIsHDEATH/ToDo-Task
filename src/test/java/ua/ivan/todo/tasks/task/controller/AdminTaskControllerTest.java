@@ -12,7 +12,6 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.MediaType;
-import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
@@ -25,10 +24,9 @@ import ua.ivan.todo.tasks.task.dto.response.TaskListItemResponse;
 import ua.ivan.todo.tasks.task.dto.response.TaskResponse;
 import ua.ivan.todo.tasks.task.model.TaskPriority;
 import ua.ivan.todo.tasks.task.model.TaskStatus;
-import ua.ivan.todo.tasks.task.service.TaskService;
+import ua.ivan.todo.tasks.task.service.AdminTaskService;
 import ua.ivan.todo.tasks.user.dto.response.UserShortResponse;
 
-import java.security.Principal;
 import java.util.List;
 import java.util.Set;
 
@@ -42,13 +40,13 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @ExtendWith(MockitoExtension.class)
-class TaskControllerTest {
+class AdminTaskControllerTest {
 
     @Mock
-    private TaskService taskService;
+    private AdminTaskService adminTaskService;
 
     @InjectMocks
-    private TaskController taskController;
+    private AdminTaskController adminTaskController;
 
     private MockMvc mockMvc;
 
@@ -57,7 +55,7 @@ class TaskControllerTest {
     @BeforeEach
     void setUp() {
         mockMvc = MockMvcBuilders
-            .standaloneSetup(taskController)
+            .standaloneSetup(adminTaskController)
             .setControllerAdvice(new GlobalExceptionHandler())
             .setCustomArgumentResolvers(new PageableHandlerMethodArgumentResolver())
             .setValidator(validator())
@@ -65,7 +63,7 @@ class TaskControllerTest {
     }
 
     @Test
-    void findCurrentUserTasksShouldReturnPagedTasks() throws Exception {
+    void findAllShouldReturnPagedTasks() throws Exception {
         TaskListItemResponse firstResponse = new TaskListItemResponse(
             1L,
             "First task",
@@ -81,11 +79,9 @@ class TaskControllerTest {
         PageResponse<TaskListItemResponse> response = PageResponse.from(
             new PageImpl<>(List.of(firstResponse, secondResponse)));
 
-        when(taskService.findCurrentUserTasks(eq("user@mail.com"), any(Pageable.class)))
-            .thenReturn(response);
+        when(adminTaskService.findAll(any(Pageable.class))).thenReturn(response);
 
-        mockMvc.perform(get("/api/tasks")
-            .principal(authentication()))
+        mockMvc.perform(get("/api/admin/tasks"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.content[0].id").value(1))
             .andExpect(jsonPath("$.content[0].name").value("First task"))
@@ -102,31 +98,70 @@ class TaskControllerTest {
             .andExpect(jsonPath("$.first").value(true))
             .andExpect(jsonPath("$.last").value(true));
 
-        verify(taskService).findCurrentUserTasks(eq("user@mail.com"), any(Pageable.class));
+        verify(adminTaskService).findAll(any(Pageable.class));
     }
 
     @Test
-    void findCurrentUserTasksShouldPassPageableToService() throws Exception {
-        when(taskService.findCurrentUserTasks(eq("user@mail.com"), any(Pageable.class)))
+    void findAllShouldPassPageableToService() throws Exception {
+        when(adminTaskService.findAll(any(Pageable.class)))
                 .thenReturn(PageResponse.from(new PageImpl<>(List.of())));
 
-        mockMvc.perform(get("/api/tasks")
-                        .principal(authentication())
+        mockMvc.perform(get("/api/admin/tasks")
                         .param("page", "2")
                         .param("size", "5")
-                        .param("sort", "priority,desc"))
+                        .param("sort", "status,desc"))
                 .andExpect(status().isOk());
 
         ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
 
-        verify(taskService).findCurrentUserTasks(eq("user@mail.com"), pageableCaptor.capture());
+        verify(adminTaskService).findAll(pageableCaptor.capture());
 
         Pageable pageable = pageableCaptor.getValue();
 
         assertThat(pageable.getPageNumber()).isEqualTo(2);
         assertThat(pageable.getPageSize()).isEqualTo(5);
-        assertThat(pageable.getSort().getOrderFor("priority")).isNotNull();
-        assertThat(pageable.getSort().getOrderFor("priority").isDescending()).isTrue();
+        assertThat(pageable.getSort().getOrderFor("status")).isNotNull();
+        assertThat(pageable.getSort().getOrderFor("status").isDescending()).isTrue();
+    }
+
+    @Test
+    void findAllByOwnerIdShouldReturnPagedTasks() throws Exception {
+        TaskListItemResponse responseItem = new TaskListItemResponse(
+            1L,
+            "Owner task",
+            TaskPriority.HIGH,
+            TaskStatus.TODO);
+
+        PageResponse<TaskListItemResponse> response = PageResponse.from(
+            new PageImpl<>(List.of(responseItem)));
+
+        when(adminTaskService.findAllByOwnerId(eq(10L), any(Pageable.class)))
+            .thenReturn(response);
+
+        mockMvc.perform(get("/api/admin/users/{userId}/tasks", 10L))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.content[0].id").value(1))
+            .andExpect(jsonPath("$.content[0].name").value("Owner task"))
+            .andExpect(jsonPath("$.content[0].priority").value("HIGH"))
+            .andExpect(jsonPath("$.content[0].status").value("TODO"))
+            .andExpect(jsonPath("$.totalElements").value(1));
+
+        verify(adminTaskService).findAllByOwnerId(eq(10L), any(Pageable.class));
+    }
+
+    @Test
+    void findAllByOwnerIdShouldReturnNotFoundWhenOwnerDoesNotExist() throws Exception {
+        when(adminTaskService.findAllByOwnerId(eq(99L), any(Pageable.class)))
+                .thenThrow(new NotFoundException("User with id '99' was not found"));
+
+        mockMvc.perform(get("/api/admin/users/{userId}/tasks", 99L))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.status").value(404))
+                .andExpect(jsonPath("$.error").value("Not Found"))
+                .andExpect(jsonPath("$.message").value("User with id '99' was not found"))
+                .andExpect(jsonPath("$.path").value("/api/admin/users/99/tasks"));
+
+        verify(adminTaskService).findAllByOwnerId(eq(99L), any(Pageable.class));
     }
 
     @Test
@@ -142,10 +177,9 @@ class TaskControllerTest {
             TaskPriority.HIGH,
             TaskStatus.TODO);
 
-        when(taskService.create("user@mail.com", request)).thenReturn(response);
+        when(adminTaskService.create(10L, request)).thenReturn(response);
 
-        mockMvc.perform(post("/api/tasks")
-            .principal(authentication())
+        mockMvc.perform(post("/api/admin/users/{userId}/tasks", 10L)
             .contentType(MediaType.APPLICATION_JSON)
             .content(objectMapper.writeValueAsString(request)))
             .andExpect(status().isCreated())
@@ -153,10 +187,10 @@ class TaskControllerTest {
             .andExpect(jsonPath("$.name").value("New task"))
             .andExpect(jsonPath("$.priority").value("HIGH"))
             .andExpect(jsonPath("$.status").value("TODO"))
-            .andExpect(jsonPath("$.owner.id").value(1))
-            .andExpect(jsonPath("$.owner.email").value("user@mail.com"));
+            .andExpect(jsonPath("$.owner.id").value(10))
+            .andExpect(jsonPath("$.owner.email").value("owner@mail.com"));
 
-        verify(taskService).create("user@mail.com", request);
+        verify(adminTaskService).create(10L, request);
     }
 
     @Test
@@ -169,18 +203,17 @@ class TaskControllerTest {
             }
             """;
 
-        mockMvc.perform(post("/api/tasks")
-            .principal(authentication())
+        mockMvc.perform(post("/api/admin/users/{userId}/tasks", 10L)
             .contentType(MediaType.APPLICATION_JSON)
             .content(body))
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.status").value(400))
             .andExpect(jsonPath("$.error").value("Bad Request"))
             .andExpect(jsonPath("$.message").value("Request validation failed"))
-            .andExpect(jsonPath("$.path").value("/api/tasks"))
+            .andExpect(jsonPath("$.path").value("/api/admin/users/10/tasks"))
             .andExpect(jsonPath("$.fieldErrors").isArray());
 
-        verify(taskService, never()).create(any(), any());
+        verify(adminTaskService, never()).create(any(), any());
     }
 
     @Test
@@ -191,34 +224,32 @@ class TaskControllerTest {
             TaskPriority.HIGH,
             TaskStatus.TODO);
 
-        when(taskService.findById(1L, "user@mail.com")).thenReturn(response);
+        when(adminTaskService.findById(1L)).thenReturn(response);
 
-        mockMvc.perform(get("/api/tasks/{taskId}", 1L)
-            .principal(authentication()))
+        mockMvc.perform(get("/api/admin/tasks/{taskId}", 1L))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.id").value(1))
             .andExpect(jsonPath("$.name").value("Task"))
             .andExpect(jsonPath("$.priority").value("HIGH"))
             .andExpect(jsonPath("$.status").value("TODO"))
-            .andExpect(jsonPath("$.owner.email").value("user@mail.com"));
+            .andExpect(jsonPath("$.owner.email").value("owner@mail.com"));
 
-        verify(taskService).findById(1L, "user@mail.com");
+        verify(adminTaskService).findById(1L);
     }
 
     @Test
-    void findByIdShouldReturnNotFoundWhenTaskDoesNotExistOrBelongsToAnotherUser() throws Exception {
-        when(taskService.findById(99L, "user@mail.com"))
+    void findByIdShouldReturnNotFoundWhenTaskDoesNotExist() throws Exception {
+        when(adminTaskService.findById(99L))
                 .thenThrow(new NotFoundException("Task with id '99' was not found"));
 
-        mockMvc.perform(get("/api/tasks/{taskId}", 99L)
-                        .principal(authentication()))
+        mockMvc.perform(get("/api/admin/tasks/{taskId}", 99L))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.status").value(404))
                 .andExpect(jsonPath("$.error").value("Not Found"))
                 .andExpect(jsonPath("$.message").value("Task with id '99' was not found"))
-                .andExpect(jsonPath("$.path").value("/api/tasks/99"));
+                .andExpect(jsonPath("$.path").value("/api/admin/tasks/99"));
 
-        verify(taskService).findById(99L, "user@mail.com");
+        verify(adminTaskService).findById(99L);
     }
 
     @Test
@@ -235,10 +266,9 @@ class TaskControllerTest {
             TaskPriority.MEDIUM,
             TaskStatus.IN_PROGRESS);
 
-        when(taskService.update(1L, "user@mail.com", request)).thenReturn(response);
+        when(adminTaskService.update(1L, request)).thenReturn(response);
 
-        mockMvc.perform(put("/api/tasks/{taskId}", 1L)
-            .principal(authentication())
+        mockMvc.perform(put("/api/admin/tasks/{taskId}", 1L)
             .contentType(MediaType.APPLICATION_JSON)
             .content(objectMapper.writeValueAsString(request)))
             .andExpect(status().isOk())
@@ -246,9 +276,9 @@ class TaskControllerTest {
             .andExpect(jsonPath("$.name").value("Updated task"))
             .andExpect(jsonPath("$.priority").value("MEDIUM"))
             .andExpect(jsonPath("$.status").value("IN_PROGRESS"))
-            .andExpect(jsonPath("$.owner.email").value("user@mail.com"));
+            .andExpect(jsonPath("$.owner.email").value("owner@mail.com"));
 
-        verify(taskService).update(1L, "user@mail.com", request);
+        verify(adminTaskService).update(1L, request);
     }
 
     @Test
@@ -262,52 +292,42 @@ class TaskControllerTest {
             }
             """;
 
-        mockMvc.perform(put("/api/tasks/{taskId}", 1L)
-            .principal(authentication())
+        mockMvc.perform(put("/api/admin/tasks/{taskId}", 1L)
             .contentType(MediaType.APPLICATION_JSON)
             .content(body))
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.status").value(400))
             .andExpect(jsonPath("$.error").value("Bad Request"))
             .andExpect(jsonPath("$.message").value("Request validation failed"))
-            .andExpect(jsonPath("$.path").value("/api/tasks/1"))
+            .andExpect(jsonPath("$.path").value("/api/admin/tasks/1"))
             .andExpect(jsonPath("$.fieldErrors").isArray());
 
-        verify(taskService, never()).update(any(), any(), any());
+        verify(adminTaskService, never()).update(any(), any());
     }
 
     @Test
     void deleteByIdShouldReturnNoContent() throws Exception {
-        mockMvc.perform(delete("/api/tasks/{taskId}", 1L)
-            .principal(authentication()))
+        mockMvc.perform(delete("/api/admin/tasks/{taskId}", 1L))
             .andExpect(status().isNoContent())
             .andExpect(content().string(""));
 
-        verify(taskService).deleteById(1L, "user@mail.com");
+        verify(adminTaskService).deleteById(1L);
     }
 
     @Test
-    void deleteByIdShouldReturnNotFoundWhenTaskDoesNotExistOrBelongsToAnotherUser() throws Exception {
+    void deleteByIdShouldReturnNotFoundWhenTaskDoesNotExist() throws Exception {
         doThrow(new NotFoundException("Task with id '99' was not found"))
-            .when(taskService)
-            .deleteById(99L, "user@mail.com");
+            .when(adminTaskService)
+            .deleteById(99L);
 
-        mockMvc.perform(delete("/api/tasks/{taskId}", 99L)
-            .principal(authentication()))
+        mockMvc.perform(delete("/api/admin/tasks/{taskId}", 99L))
             .andExpect(status().isNotFound())
             .andExpect(jsonPath("$.status").value(404))
             .andExpect(jsonPath("$.error").value("Not Found"))
             .andExpect(jsonPath("$.message").value("Task with id '99' was not found"))
-            .andExpect(jsonPath("$.path").value("/api/tasks/99"));
+            .andExpect(jsonPath("$.path").value("/api/admin/tasks/99"));
 
-        verify(taskService).deleteById(99L, "user@mail.com");
-    }
-
-    private static Principal authentication() {
-        return new TestingAuthenticationToken(
-            "user@mail.com",
-            null,
-            "ROLE_USER");
+        verify(adminTaskService).deleteById(99L);
     }
 
     private static TaskResponse taskResponse(
@@ -316,10 +336,10 @@ class TaskControllerTest {
         TaskPriority priority,
         TaskStatus status) {
         UserShortResponse owner = new UserShortResponse(
-            1L,
-            "User",
+            10L,
+            "Task",
             "Owner",
-            "user@mail.com");
+            "owner@mail.com");
 
         return new TaskResponse(
             id,
