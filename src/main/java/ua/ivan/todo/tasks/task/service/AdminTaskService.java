@@ -26,10 +26,10 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-public class TaskService {
+public class AdminTaskService {
 
+    private static final String USER_NOT_FOUND_MESSAGE = "User with id '%d' was not found";
     private static final String TASK_NOT_FOUND_MESSAGE = "Task with id '%d' was not found";
-    private static final String CURRENT_USER_NOT_FOUND_MESSAGE = "Current user was not found";
     private static final String USERS_NOT_FOUND_MESSAGE = "Users with ids %s were not found";
     private static final String OWNER_AS_COLLABORATOR_MESSAGE = "Task owner cannot be added as collaborator";
 
@@ -39,32 +39,36 @@ public class TaskService {
     private final DomainModelValidator validator;
 
     @Transactional(readOnly = true)
-    public PageResponse<TaskListItemResponse> findCurrentUserTasks(
-        String currentUserEmail,
-        Pageable pageable) {
-        User currentUser = getCurrentUserOrThrow(currentUserEmail);
-
+    public PageResponse<TaskListItemResponse> findAll(Pageable pageable) {
         return PageResponse.from(
-            taskRepository.findAllByOwnerId(currentUser.getId(), pageable)
+            taskRepository.findAll(pageable)
                 .map(taskMapper::toListItemResponse));
     }
 
     @Transactional(readOnly = true)
-    public TaskResponse findById(Long taskId, String currentUserEmail) {
-        User currentUser = getCurrentUserOrThrow(currentUserEmail);
-        Task task = getOwnedTaskOrThrow(taskId, currentUser);
+    public PageResponse<TaskListItemResponse> findAllByOwnerId(Long userId, Pageable pageable) {
+        ensureUserExists(userId);
+
+        return PageResponse.from(
+            taskRepository.findAllByOwnerId(userId, pageable)
+                .map(taskMapper::toListItemResponse));
+    }
+
+    @Transactional(readOnly = true)
+    public TaskResponse findById(Long taskId) {
+        Task task = getTaskOrThrow(taskId);
 
         return taskMapper.toResponse(task);
     }
 
     @Transactional
-    public TaskResponse create(String currentUserEmail, TaskCreateRequest request) {
-        User currentUser = getCurrentUserOrThrow(currentUserEmail);
+    public TaskResponse create(Long ownerId, TaskCreateRequest request) {
+        User owner = getUserOrThrow(ownerId);
 
         Task task = taskMapper.toEntity(request);
-        task.setOwner(currentUser);
+        task.setOwner(owner);
         task.setStatus(TaskStatus.TODO);
-        task.setCollaborators(resolveCollaborators(currentUser.getId(), request.collaboratorIds()));
+        task.setCollaborators(resolveCollaborators(ownerId, request.collaboratorIds()));
 
         Task savedTask = taskRepository.save(validator.validate(task));
 
@@ -72,14 +76,14 @@ public class TaskService {
     }
 
     @Transactional
-    public TaskResponse update(Long taskId, String currentUserEmail, TaskUpdateRequest request) {
-        User currentUser = getCurrentUserOrThrow(currentUserEmail);
-        Task task = getOwnedTaskOrThrow(taskId, currentUser);
+    public TaskResponse update(Long taskId, TaskUpdateRequest request) {
+        Task task = getTaskOrThrow(taskId);
+        Long ownerId = task.getOwner().getId();
 
         task.setName(request.name());
         task.setPriority(request.priority());
         task.setStatus(request.status());
-        task.setCollaborators(resolveCollaborators(currentUser.getId(), request.collaboratorIds()));
+        task.setCollaborators(resolveCollaborators(ownerId, request.collaboratorIds()));
 
         Task savedTask = taskRepository.save(validator.validate(task));
 
@@ -87,27 +91,28 @@ public class TaskService {
     }
 
     @Transactional
-    public void deleteById(Long taskId, String currentUserEmail) {
-        User currentUser = getCurrentUserOrThrow(currentUserEmail);
-        Task task = getOwnedTaskOrThrow(taskId, currentUser);
-
-        taskRepository.delete(task);
-    }
-
-    private Task getOwnedTaskOrThrow(Long taskId, User currentUser) {
-        Task task = taskRepository.findById(taskId)
-            .orElseThrow(() -> new NotFoundException(TASK_NOT_FOUND_MESSAGE.formatted(taskId)));
-
-        if (!task.getOwner().getId().equals(currentUser.getId())) {
+    public void deleteById(Long taskId) {
+        if (!taskRepository.existsById(taskId)) {
             throw new NotFoundException(TASK_NOT_FOUND_MESSAGE.formatted(taskId));
         }
 
-        return task;
+        taskRepository.deleteById(taskId);
     }
 
-    private User getCurrentUserOrThrow(String email) {
-        return userRepository.findByEmail(email)
-            .orElseThrow(() -> new NotFoundException(CURRENT_USER_NOT_FOUND_MESSAGE));
+    private Task getTaskOrThrow(Long taskId) {
+        return taskRepository.findById(taskId)
+            .orElseThrow(() -> new NotFoundException(TASK_NOT_FOUND_MESSAGE.formatted(taskId)));
+    }
+
+    private User getUserOrThrow(Long userId) {
+        return userRepository.findById(userId)
+            .orElseThrow(() -> new NotFoundException(USER_NOT_FOUND_MESSAGE.formatted(userId)));
+    }
+
+    private void ensureUserExists(Long userId) {
+        if (!userRepository.existsById(userId)) {
+            throw new NotFoundException(USER_NOT_FOUND_MESSAGE.formatted(userId));
+        }
     }
 
     private Set<User> resolveCollaborators(Long ownerId, Set<Long> collaboratorIds) {
