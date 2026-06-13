@@ -26,7 +26,7 @@ import ua.ivan.todo.tasks.task.dto.response.TaskResponse;
 import ua.ivan.todo.tasks.task.model.TaskPriority;
 import ua.ivan.todo.tasks.task.model.TaskStatus;
 import ua.ivan.todo.tasks.task.service.TaskService;
-import ua.ivan.todo.tasks.user.dto.response.UserShortResponse;
+import ua.ivan.todo.tasks.user.api.dto.response.UserShortResponse;
 
 import java.security.Principal;
 import java.util.List;

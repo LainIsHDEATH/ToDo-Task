@@ -16,10 +16,10 @@ import ua.ivan.todo.tasks.common.exception.handler.GlobalExceptionHandler;
 import ua.ivan.todo.tasks.security.dto.request.LoginRequest;
 import ua.ivan.todo.tasks.security.dto.response.LoginResponse;
 import ua.ivan.todo.tasks.security.service.AuthService;
-import ua.ivan.todo.tasks.user.dto.request.UserRegistrationRequest;
-import ua.ivan.todo.tasks.user.dto.response.UserResponse;
+import ua.ivan.todo.tasks.user.api.dto.request.UserRegistrationRequest;
+import ua.ivan.todo.tasks.user.api.dto.response.UserResponse;
+import ua.ivan.todo.tasks.user.api.interfaces.UserServiceFacade;
 import ua.ivan.todo.tasks.user.model.Role;
-import ua.ivan.todo.tasks.user.service.UserService;
 
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -29,7 +29,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class AuthControllerTest {
 
     @Mock
-    private UserService userService;
+    private UserServiceFacade userServiceFacade;
 
     @Mock
     private AuthService authService;
@@ -65,7 +65,7 @@ class AuthControllerTest {
             "nick@mail.com",
             Role.USER);
 
-        when(userService.register(request)).thenReturn(response);
+        when(userServiceFacade.register(request)).thenReturn(response);
 
         mockMvc.perform(post("/api/auth/register")
             .contentType(MediaType.APPLICATION_JSON)
@@ -78,7 +78,7 @@ class AuthControllerTest {
             .andExpect(jsonPath("$.role").value("USER"))
             .andExpect(jsonPath("$.passwordHash").doesNotExist());
 
-        verify(userService).register(request);
+        verify(userServiceFacade).register(request);
     }
 
     @Test
@@ -102,7 +102,7 @@ class AuthControllerTest {
             .andExpect(jsonPath("$.path").value("/api/auth/register"))
             .andExpect(jsonPath("$.fieldErrors").isArray());
 
-        verifyNoInteractions(userService);
+        verifyNoInteractions(userServiceFacade);
     }
 
     @Test

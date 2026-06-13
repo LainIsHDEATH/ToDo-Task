@@ -7,9 +7,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import ua.ivan.todo.tasks.user.api.interfaces.UserReadFacade;
 import ua.ivan.todo.tasks.user.model.Role;
 import ua.ivan.todo.tasks.user.model.User;
-import ua.ivan.todo.tasks.user.repository.UserRepository;
 
 import java.util.Optional;
 
@@ -21,7 +21,7 @@ import static org.mockito.Mockito.when;
 class CustomUserDetailsServiceTest {
 
     @Mock
-    private UserRepository userRepository;
+    private UserReadFacade userReadFacade;
 
     @InjectMocks
     private CustomUserDetailsService userDetailsService;
@@ -37,7 +37,7 @@ class CustomUserDetailsServiceTest {
             .role(Role.USER)
             .build();
 
-        when(userRepository.findByEmail("nick@mail.com"))
+        when(userReadFacade.findByEmail("nick@mail.com"))
             .thenReturn(Optional.of(user));
 
         UserDetails userDetails = userDetailsService.loadUserByUsername("nick@mail.com");
@@ -60,7 +60,7 @@ class CustomUserDetailsServiceTest {
             .role(Role.ADMIN)
             .build();
 
-        when(userRepository.findByEmail("admin@mail.com"))
+        when(userReadFacade.findByEmail("admin@mail.com"))
             .thenReturn(Optional.of(user));
 
         UserDetails userDetails = userDetailsService.loadUserByUsername("admin@mail.com");
@@ -72,7 +72,7 @@ class CustomUserDetailsServiceTest {
 
     @Test
     void loadUserByUsernameShouldThrowUsernameNotFoundExceptionWhenUserDoesNotExist() {
-        when(userRepository.findByEmail("missing@mail.com"))
+        when(userReadFacade.findByEmail("missing@mail.com"))
                 .thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> userDetailsService.loadUserByUsername("missing@mail.com"))

@@ -11,9 +11,9 @@ import org.springframework.web.bind.annotation.*;
 import ua.ivan.todo.tasks.security.dto.request.LoginRequest;
 import ua.ivan.todo.tasks.security.dto.response.LoginResponse;
 import ua.ivan.todo.tasks.security.service.AuthService;
-import ua.ivan.todo.tasks.user.dto.request.UserRegistrationRequest;
-import ua.ivan.todo.tasks.user.dto.response.UserResponse;
-import ua.ivan.todo.tasks.user.service.UserService;
+import ua.ivan.todo.tasks.user.api.dto.request.UserRegistrationRequest;
+import ua.ivan.todo.tasks.user.api.dto.response.UserResponse;
+import ua.ivan.todo.tasks.user.api.interfaces.UserServiceFacade;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -21,7 +21,7 @@ import ua.ivan.todo.tasks.user.service.UserService;
 @Tag(name = "Authentication", description = "Registration and login endpoints")
 public class AuthController {
 
-    private final UserService userService;
+    private final UserServiceFacade userServiceFacade;
     private final AuthService authService;
 
     @PostMapping("/register")
@@ -31,7 +31,7 @@ public class AuthController {
     @ApiResponse(responseCode = "400", description = "Invalid request body")
     @ApiResponse(responseCode = "409", description = "Email already exists")
     public UserResponse register(@Valid @RequestBody UserRegistrationRequest request) {
-        return userService.register(request);
+        return userServiceFacade.register(request);
     }
 
     @PostMapping("/login")

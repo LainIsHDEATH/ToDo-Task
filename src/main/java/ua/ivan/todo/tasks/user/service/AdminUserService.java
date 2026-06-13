@@ -10,9 +10,9 @@ import ua.ivan.todo.tasks.common.dto.response.PageResponse;
 import ua.ivan.todo.tasks.common.exception.exceptions.ConflictException;
 import ua.ivan.todo.tasks.common.exception.exceptions.NotFoundException;
 import ua.ivan.todo.tasks.common.validation.DomainModelValidator;
-import ua.ivan.todo.tasks.user.dto.request.UserUpdateRequest;
-import ua.ivan.todo.tasks.user.dto.response.UserResponse;
 import ua.ivan.todo.tasks.user.mapper.UserMapper;
+import ua.ivan.todo.tasks.user.dto.request.UserUpdateRequest;
+import ua.ivan.todo.tasks.user.api.dto.response.UserResponse;
 import ua.ivan.todo.tasks.user.model.User;
 import ua.ivan.todo.tasks.user.repository.UserRepository;
 

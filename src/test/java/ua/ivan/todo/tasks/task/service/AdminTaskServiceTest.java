@@ -22,10 +22,10 @@ import ua.ivan.todo.tasks.task.model.Task;
 import ua.ivan.todo.tasks.task.model.TaskPriority;
 import ua.ivan.todo.tasks.task.model.TaskStatus;
 import ua.ivan.todo.tasks.task.repository.TaskRepository;
-import ua.ivan.todo.tasks.user.dto.response.UserShortResponse;
+import ua.ivan.todo.tasks.user.api.dto.response.UserShortResponse;
+import ua.ivan.todo.tasks.user.api.interfaces.UserReadFacade;
 import ua.ivan.todo.tasks.user.model.Role;
 import ua.ivan.todo.tasks.user.model.User;
-import ua.ivan.todo.tasks.user.repository.UserRepository;
 
 import java.util.HashSet;
 import java.util.List;
@@ -44,7 +44,7 @@ class AdminTaskServiceTest {
     private TaskRepository taskRepository;
 
     @Mock
-    private UserRepository userRepository;
+    private UserReadFacade userReadFacade;
 
     @Mock
     private TaskMapper taskMapper;
@@ -133,7 +133,7 @@ class AdminTaskServiceTest {
             pageable,
             1);
 
-        when(userRepository.existsById(1L)).thenReturn(true);
+        when(userReadFacade.existsById(1L)).thenReturn(true);
         when(taskRepository.findAllByOwnerId(1L, pageable)).thenReturn(tasksPage);
         when(taskMapper.toListItemResponse(task)).thenReturn(response);
 
@@ -143,7 +143,7 @@ class AdminTaskServiceTest {
         assertThat(actual.content()).containsExactly(response);
         assertThat(actual.totalElements()).isEqualTo(1);
 
-        verify(userRepository).existsById(1L);
+        verify(userReadFacade).existsById(1L);
         verify(taskRepository).findAllByOwnerId(1L, pageable);
     }
 
@@ -151,13 +151,13 @@ class AdminTaskServiceTest {
     void findAllByOwnerIdShouldThrowNotFoundExceptionWhenOwnerDoesNotExist() {
         Pageable pageable = PageRequest.of(0, 20);
 
-        when(userRepository.existsById(99L)).thenReturn(false);
+        when(userReadFacade.existsById(99L)).thenReturn(false);
 
         assertThatThrownBy(() -> adminTaskService.findAllByOwnerId(99L, pageable))
             .isInstanceOf(NotFoundException.class)
             .hasMessage("User with id '99' was not found");
 
-        verify(userRepository).existsById(99L);
+        verify(userReadFacade).existsById(99L);
         verifyNoInteractions(taskRepository);
         verifyNoInteractions(taskMapper);
     }
@@ -224,9 +224,9 @@ class AdminTaskServiceTest {
 
         TaskResponse response = taskResponse(savedTask);
 
-        when(userRepository.findById(1L)).thenReturn(Optional.of(owner));
+        when(userReadFacade.findById(1L)).thenReturn(Optional.of(owner));
         when(taskMapper.toEntity(request)).thenReturn(task);
-        when(userRepository.findAllById(Set.of(2L))).thenReturn(List.of(collaborator));
+        when(userReadFacade.findAllByIds(Set.of(2L))).thenReturn(List.of(collaborator));
         when(validator.validate(task)).thenReturn(task);
         when(taskRepository.save(task)).thenReturn(savedTask);
         when(taskMapper.toResponse(savedTask)).thenReturn(response);
@@ -238,7 +238,7 @@ class AdminTaskServiceTest {
         assertThat(task.getStatus()).isEqualTo(TaskStatus.TODO);
         assertThat(task.getCollaborators()).containsExactly(collaborator);
 
-        verify(userRepository).findById(1L);
+        verify(userReadFacade).findById(1L);
         verify(taskRepository).save(task);
     }
 
@@ -249,13 +249,13 @@ class AdminTaskServiceTest {
             TaskPriority.HIGH,
             Set.of());
 
-        when(userRepository.findById(99L)).thenReturn(Optional.empty());
+        when(userReadFacade.findById(99L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> adminTaskService.create(99L, request))
             .isInstanceOf(NotFoundException.class)
             .hasMessage("User with id '99' was not found");
 
-        verify(userRepository).findById(99L);
+        verify(userReadFacade).findById(99L);
         verifyNoInteractions(taskRepository);
         verifyNoInteractions(taskMapper);
         verifyNoInteractions(validator);
@@ -275,15 +275,15 @@ class AdminTaskServiceTest {
             .priority(TaskPriority.HIGH)
             .build();
 
-        when(userRepository.findById(1L)).thenReturn(Optional.of(owner));
+        when(userReadFacade.findById(1L)).thenReturn(Optional.of(owner));
         when(taskMapper.toEntity(request)).thenReturn(task);
 
         assertThatThrownBy(() -> adminTaskService.create(1L, request))
             .isInstanceOf(ConflictException.class)
             .hasMessage("Task owner cannot be added as collaborator");
 
-        verify(userRepository).findById(1L);
-        verify(userRepository, never()).findAllById(any());
+        verify(userReadFacade).findById(1L);
+        verify(userReadFacade, never()).findAllByIds(any());
         verify(taskRepository, never()).save(any());
         verifyNoInteractions(validator);
     }
@@ -309,7 +309,7 @@ class AdminTaskServiceTest {
         TaskResponse response = taskResponse(task);
 
         when(taskRepository.findById(1L)).thenReturn(Optional.of(task));
-        when(userRepository.findAllById(Set.of(2L))).thenReturn(List.of(collaborator));
+        when(userReadFacade.findAllByIds(Set.of(2L))).thenReturn(List.of(collaborator));
         when(validator.validate(task)).thenReturn(task);
         when(taskRepository.save(task)).thenReturn(task);
         when(taskMapper.toResponse(task)).thenReturn(response);
@@ -370,7 +370,7 @@ class AdminTaskServiceTest {
             .hasMessage("Task owner cannot be added as collaborator");
 
         verify(taskRepository).findById(1L);
-        verify(userRepository, never()).findAllById(any());
+        verify(userReadFacade, never()).findAllByIds(any());
         verify(taskRepository, never()).save(any());
         verifyNoInteractions(validator);
     }

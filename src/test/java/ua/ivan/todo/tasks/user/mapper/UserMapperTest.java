@@ -3,9 +3,9 @@ package ua.ivan.todo.tasks.user.mapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import ua.ivan.todo.tasks.user.dto.request.UserRegistrationRequest;
-import ua.ivan.todo.tasks.user.dto.response.UserResponse;
-import ua.ivan.todo.tasks.user.dto.response.UserShortResponse;
+import ua.ivan.todo.tasks.user.api.dto.request.UserRegistrationRequest;
+import ua.ivan.todo.tasks.user.api.dto.response.UserResponse;
+import ua.ivan.todo.tasks.user.api.dto.response.UserShortResponse;
 import ua.ivan.todo.tasks.user.model.Role;
 import ua.ivan.todo.tasks.user.model.User;
 
