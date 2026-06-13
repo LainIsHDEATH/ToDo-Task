@@ -27,11 +27,11 @@ import java.util.Set;
 public class AdminUserController {
 
     private static final Set<String> ALLOWED_SORT_FIELDS = Set.of(
-            "id",
-            "firstName",
-            "lastName",
-            "email",
-            "role");
+        "id",
+        "firstName",
+        "lastName",
+        "email",
+        "role");
 
     private final AdminUserService adminUserService;
 
@@ -41,7 +41,7 @@ public class AdminUserController {
     @ApiResponse(responseCode = "401", description = "Authentication is required")
     @ApiResponse(responseCode = "403", description = "Admin role is required")
     public PageResponse<UserResponse> findAll(
-            @PageableDefault(size = 20, sort = "id", direction = Sort.Direction.ASC) Pageable pageable) {
+        @PageableDefault(size = 20, sort = "id", direction = Sort.Direction.ASC) Pageable pageable) {
         SortValidator.validate(pageable.getSort(), ALLOWED_SORT_FIELDS);
 
         return adminUserService.findAll(pageable);
@@ -66,8 +66,8 @@ public class AdminUserController {
     @ApiResponse(responseCode = "404", description = "User was not found")
     @ApiResponse(responseCode = "409", description = "Email already exists")
     public UserResponse update(
-            @PathVariable Long id,
-            @Valid @RequestBody UserUpdateRequest request) {
+        @PathVariable Long id,
+        @Valid @RequestBody UserUpdateRequest request) {
         return adminUserService.update(id, request);
     }
 

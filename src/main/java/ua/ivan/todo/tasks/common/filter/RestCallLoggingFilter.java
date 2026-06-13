@@ -24,22 +24,22 @@ public class RestCallLoggingFilter extends OncePerRequestFilter {
     private static final int MAX_REQUEST_BODY_LENGTH = 10_000;
 
     private static final Set<String> SENSITIVE_FIELDS = Set.of(
-            "password",
-            "oldPassword",
-            "newPassword",
-            "passwordHash",
-            "accessToken",
-            "token");
+        "password",
+        "oldPassword",
+        "newPassword",
+        "passwordHash",
+        "accessToken",
+        "token");
 
     @Override
     protected void doFilterInternal(
-            @NonNull HttpServletRequest request,
-            @NonNull HttpServletResponse response,
-            FilterChain filterChain) throws ServletException, IOException {
+        @NonNull HttpServletRequest request,
+        @NonNull HttpServletResponse response,
+        FilterChain filterChain) throws ServletException, IOException {
         ContentCachingRequestWrapper wrappedRequest =
-                new ContentCachingRequestWrapper(request, MAX_REQUEST_BODY_LENGTH);
+            new ContentCachingRequestWrapper(request, MAX_REQUEST_BODY_LENGTH);
         ContentCachingResponseWrapper wrappedResponse =
-                new ContentCachingResponseWrapper(response);
+            new ContentCachingResponseWrapper(response);
 
         String method = request.getMethod();
         String uri = request.getRequestURI();
@@ -70,8 +70,8 @@ public class RestCallLoggingFilter extends OncePerRequestFilter {
         String uri = request.getRequestURI();
 
         return uri.startsWith("/actuator")
-                || uri.startsWith("/swagger-ui")
-                || uri.startsWith("/v3/api-docs");
+            || uri.startsWith("/swagger-ui")
+            || uri.startsWith("/v3/api-docs");
     }
 
     private void logRequestStarted(String method, String uri, String query) {
@@ -84,23 +84,23 @@ public class RestCallLoggingFilter extends OncePerRequestFilter {
         }
 
         log.info("REST request body. method={}, uri={}, body={}",
-                method, uri, maskSensitiveData(requestBody));
+            method, uri, maskSensitiveData(requestBody));
     }
 
     private void logResponse(
-            String method,
-            String uri,
-            int status,
-            long durationMs,
-            String responseBody) {
+        String method,
+        String uri,
+        int status,
+        long durationMs,
+        String responseBody) {
         if (status >= 400) {
             log.warn("REST response error. method={}, uri={}, status={}, durationMs={}, body={}",
-                    method, uri, status, durationMs, maskSensitiveData(responseBody));
+                method, uri, status, durationMs, maskSensitiveData(responseBody));
             return;
         }
 
         log.info("REST response. method={}, uri={}, status={}, durationMs={}",
-                method, uri, status, durationMs);
+            method, uri, status, durationMs);
     }
 
     private String getRequestBody(ContentCachingRequestWrapper request) {
@@ -132,8 +132,8 @@ public class RestCallLoggingFilter extends OncePerRequestFilter {
 
         for (String field : SENSITIVE_FIELDS) {
             maskedBody = maskedBody.replaceAll(
-                    "(\"" + field + "\"\\s*:\\s*\")([^\"]+)(\")",
-                    "$1***$3");
+                "(\"" + field + "\"\\s*:\\s*\")([^\"]+)(\")",
+                "$1***$3");
         }
 
         return maskedBody;

@@ -43,23 +43,23 @@ public class AdminTaskService {
     @Transactional(readOnly = true)
     public PageResponse<TaskListItemResponse> findAll(Pageable pageable) {
         log.info("Admin fetching all tasks. page={}, size={}, sort={}",
-                pageable.getPageNumber(), pageable.getPageSize(), pageable.getSort());
+            pageable.getPageNumber(), pageable.getPageSize(), pageable.getSort());
 
         return PageResponse.from(
-                taskRepository.findAll(pageable)
-                        .map(taskMapper::toListItemResponse));
+            taskRepository.findAll(pageable)
+                .map(taskMapper::toListItemResponse));
     }
 
     @Transactional(readOnly = true)
     public PageResponse<TaskListItemResponse> findAllByOwnerId(Long userId, Pageable pageable) {
         log.info("Admin fetching tasks by owner. ownerId={}, page={}, size={}, sort={}",
-                userId, pageable.getPageNumber(), pageable.getPageSize(), pageable.getSort());
+            userId, pageable.getPageNumber(), pageable.getPageSize(), pageable.getSort());
 
         ensureUserExists(userId);
 
         return PageResponse.from(
-                taskRepository.findAllByOwnerId(userId, pageable)
-                        .map(taskMapper::toListItemResponse));
+            taskRepository.findAllByOwnerId(userId, pageable)
+                .map(taskMapper::toListItemResponse));
     }
 
     @Transactional(readOnly = true)
@@ -74,7 +74,7 @@ public class AdminTaskService {
     @Transactional
     public TaskResponse create(Long ownerId, TaskCreateRequest request) {
         log.info("Admin creating task. ownerId={}, collaboratorCount={}",
-                ownerId, countCollaborators(request.collaboratorIds()));
+            ownerId, countCollaborators(request.collaboratorIds()));
 
         User owner = getUserOrThrow(ownerId);
 
@@ -86,7 +86,7 @@ public class AdminTaskService {
         Task savedTask = taskRepository.save(validator.validate(task));
 
         log.info("Admin created task successfully. taskId={}, ownerId={}",
-                savedTask.getId(), ownerId);
+            savedTask.getId(), ownerId);
 
         return taskMapper.toResponse(savedTask);
     }
@@ -94,7 +94,7 @@ public class AdminTaskService {
     @Transactional
     public TaskResponse update(Long taskId, TaskUpdateRequest request) {
         log.info("Admin updating task. taskId={}, collaboratorCount={}",
-                taskId, countCollaborators(request.collaboratorIds()));
+            taskId, countCollaborators(request.collaboratorIds()));
 
         Task task = getTaskOrThrow(taskId);
         Long ownerId = task.getOwner().getId();
@@ -107,7 +107,7 @@ public class AdminTaskService {
         Task savedTask = taskRepository.save(validator.validate(task));
 
         log.info("Admin updated task successfully. taskId={}, ownerId={}",
-                savedTask.getId(), ownerId);
+            savedTask.getId(), ownerId);
 
         return taskMapper.toResponse(savedTask);
     }
@@ -127,12 +127,12 @@ public class AdminTaskService {
 
     private Task getTaskOrThrow(Long taskId) {
         return taskRepository.findById(taskId)
-                .orElseThrow(() -> new NotFoundException(TASK_NOT_FOUND_MESSAGE.formatted(taskId)));
+            .orElseThrow(() -> new NotFoundException(TASK_NOT_FOUND_MESSAGE.formatted(taskId)));
     }
 
     private User getUserOrThrow(Long userId) {
         return userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException(USER_NOT_FOUND_MESSAGE.formatted(userId)));
+            .orElseThrow(() -> new NotFoundException(USER_NOT_FOUND_MESSAGE.formatted(userId)));
     }
 
     private void ensureUserExists(Long userId) {
@@ -156,12 +156,12 @@ public class AdminTaskService {
 
         if (collaborators.size() != normalizedCollaboratorIds.size()) {
             Set<Long> foundIds = collaborators.stream()
-                    .map(User::getId)
-                    .collect(Collectors.toSet());
+                .map(User::getId)
+                .collect(Collectors.toSet());
 
             Set<Long> missingIds = normalizedCollaboratorIds.stream()
-                    .filter(id -> !foundIds.contains(id))
-                    .collect(Collectors.toCollection(HashSet::new));
+                .filter(id -> !foundIds.contains(id))
+                .collect(Collectors.toCollection(HashSet::new));
 
             throw new NotFoundException(USERS_NOT_FOUND_MESSAGE.formatted(missingIds));
         }

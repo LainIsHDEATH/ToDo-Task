@@ -29,19 +29,20 @@ import java.util.Set;
 public class UserController {
 
     private static final Set<String> ALLOWED_SORT_FIELDS = Set.of(
-            "id",
-            "firstName",
-            "lastName",
-            "email");
+        "id",
+        "firstName",
+        "lastName",
+        "email");
 
     private final UserService userService;
 
     @GetMapping
-    @Operation(summary = "Get user catalog", description = "Returns public user information for collaborator selection.")
+    @Operation(summary = "Get user catalog",
+        description = "Returns public user information for collaborator selection.")
     @ApiResponse(responseCode = "200", description = "Users returned successfully")
     @ApiResponse(responseCode = "401", description = "Authentication is required")
     public PageResponse<UserShortResponse> findAll(
-            @PageableDefault(size = 20, sort = "id", direction = Sort.Direction.ASC) Pageable pageable) {
+        @PageableDefault(size = 20, sort = "id", direction = Sort.Direction.ASC) Pageable pageable) {
         SortValidator.validate(pageable.getSort(), ALLOWED_SORT_FIELDS);
 
         return userService.findAllShort(pageable);
@@ -64,8 +65,8 @@ public class UserController {
     @ApiResponse(responseCode = "404", description = "Current user was not found")
     @ApiResponse(responseCode = "409", description = "Email already exists")
     public UserResponse updateCurrentUser(
-            Authentication authentication,
-            @Valid @RequestBody UserProfileUpdateRequest request) {
+        Authentication authentication,
+        @Valid @RequestBody UserProfileUpdateRequest request) {
         return userService.updateCurrentUser(authentication.getName(), request);
     }
 

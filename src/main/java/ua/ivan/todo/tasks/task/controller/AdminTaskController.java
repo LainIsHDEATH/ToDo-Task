@@ -29,10 +29,10 @@ import java.util.Set;
 public class AdminTaskController {
 
     private static final Set<String> ALLOWED_SORT_FIELDS = Set.of(
-            "id",
-            "name",
-            "priority",
-            "status");
+        "id",
+        "name",
+        "priority",
+        "status");
 
     private final AdminTaskService adminTaskService;
 
@@ -42,7 +42,7 @@ public class AdminTaskController {
     @ApiResponse(responseCode = "401", description = "Authentication is required")
     @ApiResponse(responseCode = "403", description = "Admin role is required")
     public PageResponse<TaskListItemResponse> findAll(
-            @PageableDefault(size = 20, sort = "id", direction = Sort.Direction.ASC) Pageable pageable) {
+        @PageableDefault(size = 20, sort = "id", direction = Sort.Direction.ASC) Pageable pageable) {
         SortValidator.validate(pageable.getSort(), ALLOWED_SORT_FIELDS);
 
         return adminTaskService.findAll(pageable);
@@ -55,8 +55,8 @@ public class AdminTaskController {
     @ApiResponse(responseCode = "403", description = "Admin role is required")
     @ApiResponse(responseCode = "404", description = "User was not found")
     public PageResponse<TaskListItemResponse> findAllByOwnerId(
-            @PathVariable Long userId,
-            @PageableDefault(size = 20, sort = "id", direction = Sort.Direction.ASC) Pageable pageable) {
+        @PathVariable Long userId,
+        @PageableDefault(size = 20, sort = "id", direction = Sort.Direction.ASC) Pageable pageable) {
         SortValidator.validate(pageable.getSort(), ALLOWED_SORT_FIELDS);
 
         return adminTaskService.findAllByOwnerId(userId, pageable);
@@ -72,8 +72,8 @@ public class AdminTaskController {
     @ApiResponse(responseCode = "404", description = "User or collaborator was not found")
     @ApiResponse(responseCode = "409", description = "Owner cannot be collaborator")
     public TaskResponse create(
-            @PathVariable Long userId,
-            @Valid @RequestBody TaskCreateRequest request) {
+        @PathVariable Long userId,
+        @Valid @RequestBody TaskCreateRequest request) {
         return adminTaskService.create(userId, request);
     }
 
@@ -96,8 +96,8 @@ public class AdminTaskController {
     @ApiResponse(responseCode = "404", description = "Task or collaborator was not found")
     @ApiResponse(responseCode = "409", description = "Owner cannot be collaborator")
     public TaskResponse update(
-            @PathVariable Long taskId,
-            @Valid @RequestBody TaskUpdateRequest request) {
+        @PathVariable Long taskId,
+        @Valid @RequestBody TaskUpdateRequest request) {
         return adminTaskService.update(taskId, request);
     }
 

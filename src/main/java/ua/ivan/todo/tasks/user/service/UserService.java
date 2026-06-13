@@ -48,7 +48,7 @@ public class UserService {
         User savedUser = userRepository.save(validator.validate(user));
 
         log.info("User registered successfully. userId={}, email={}",
-                savedUser.getId(), savedUser.getEmail());
+            savedUser.getId(), savedUser.getEmail());
 
         return userMapper.toResponse(savedUser);
     }
@@ -56,11 +56,11 @@ public class UserService {
     @Transactional(readOnly = true)
     public PageResponse<UserShortResponse> findAllShort(Pageable pageable) {
         log.info("Fetching user catalog. page={}, size={}, sort={}",
-                pageable.getPageNumber(), pageable.getPageSize(), pageable.getSort());
+            pageable.getPageNumber(), pageable.getPageSize(), pageable.getSort());
 
         return PageResponse.from(
-                userRepository.findAll(pageable)
-                        .map(userMapper::toShortResponse));
+            userRepository.findAll(pageable)
+                .map(userMapper::toShortResponse));
     }
 
     @Transactional(readOnly = true)
@@ -84,7 +84,7 @@ public class UserService {
     @Transactional
     public UserResponse updateCurrentUser(String currentUserEmail, UserProfileUpdateRequest request) {
         log.info("Updating current user profile. currentEmail={}, newEmail={}",
-                currentUserEmail, request.email());
+            currentUserEmail, request.email());
 
         User user = getUserByEmailOrThrow(currentUserEmail);
 
@@ -97,7 +97,7 @@ public class UserService {
         User savedUser = userRepository.save(validator.validate(user));
 
         log.info("Current user profile updated successfully. userId={}, email={}",
-                savedUser.getId(), savedUser.getEmail());
+            savedUser.getId(), savedUser.getEmail());
 
         return userMapper.toResponse(savedUser);
     }
@@ -111,17 +111,17 @@ public class UserService {
         userRepository.delete(user);
 
         log.info("Current user profile deleted successfully. userId={}, email={}",
-                user.getId(), user.getEmail());
+            user.getId(), user.getEmail());
     }
 
     private User getUserOrThrow(Long id) {
         return userRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException(USER_NOT_FOUND_MESSAGE.formatted(id)));
+            .orElseThrow(() -> new NotFoundException(USER_NOT_FOUND_MESSAGE.formatted(id)));
     }
 
     private User getUserByEmailOrThrow(String email) {
         return userRepository.findByEmail(email)
-                .orElseThrow(() -> new NotFoundException(CURRENT_USER_NOT_FOUND_MESSAGE));
+            .orElseThrow(() -> new NotFoundException(CURRENT_USER_NOT_FOUND_MESSAGE));
     }
 
     private void validateEmailIsUnique(String email) {
@@ -132,9 +132,9 @@ public class UserService {
 
     private void validateEmailIsUniqueForUpdate(String email, Long currentUserId) {
         userRepository.findByEmail(email)
-                .filter(existingUser -> !existingUser.getId().equals(currentUserId))
-                .ifPresent(existingUser -> {
-                    throw new ConflictException(EMAIL_ALREADY_EXISTS_MESSAGE.formatted(email));
-                });
+            .filter(existingUser -> !existingUser.getId().equals(currentUserId))
+            .ifPresent(existingUser -> {
+                throw new ConflictException(EMAIL_ALREADY_EXISTS_MESSAGE.formatted(email));
+            });
     }
 }

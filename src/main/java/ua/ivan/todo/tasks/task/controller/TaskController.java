@@ -30,10 +30,10 @@ import java.util.Set;
 public class TaskController {
 
     private static final Set<String> ALLOWED_SORT_FIELDS = Set.of(
-            "id",
-            "name",
-            "priority",
-            "status");
+        "id",
+        "name",
+        "priority",
+        "status");
 
     private final TaskService taskService;
 
@@ -42,8 +42,8 @@ public class TaskController {
     @ApiResponse(responseCode = "200", description = "Tasks returned successfully")
     @ApiResponse(responseCode = "401", description = "Authentication is required")
     public PageResponse<TaskListItemResponse> findCurrentUserTasks(
-            Authentication authentication,
-            @PageableDefault(size = 20, sort = "id", direction = Sort.Direction.ASC) Pageable pageable) {
+        Authentication authentication,
+        @PageableDefault(size = 20, sort = "id", direction = Sort.Direction.ASC) Pageable pageable) {
         SortValidator.validate(pageable.getSort(), ALLOWED_SORT_FIELDS);
 
         return taskService.findCurrentUserTasks(authentication.getName(), pageable);
@@ -58,8 +58,8 @@ public class TaskController {
     @ApiResponse(responseCode = "404", description = "Collaborator was not found")
     @ApiResponse(responseCode = "409", description = "Owner cannot be collaborator")
     public TaskResponse create(
-            Authentication authentication,
-            @Valid @RequestBody TaskCreateRequest request) {
+        Authentication authentication,
+        @Valid @RequestBody TaskCreateRequest request) {
         return taskService.create(authentication.getName(), request);
     }
 
@@ -69,8 +69,8 @@ public class TaskController {
     @ApiResponse(responseCode = "401", description = "Authentication is required")
     @ApiResponse(responseCode = "404", description = "Task was not found")
     public TaskResponse findById(
-            @PathVariable Long taskId,
-            Authentication authentication) {
+        @PathVariable Long taskId,
+        Authentication authentication) {
         return taskService.findById(taskId, authentication.getName());
     }
 
@@ -82,9 +82,9 @@ public class TaskController {
     @ApiResponse(responseCode = "404", description = "Task or collaborator was not found")
     @ApiResponse(responseCode = "409", description = "Owner cannot be collaborator")
     public TaskResponse update(
-            @PathVariable Long taskId,
-            Authentication authentication,
-            @Valid @RequestBody TaskUpdateRequest request) {
+        @PathVariable Long taskId,
+        Authentication authentication,
+        @Valid @RequestBody TaskUpdateRequest request) {
         return taskService.update(taskId, authentication.getName(), request);
     }
 
@@ -95,8 +95,8 @@ public class TaskController {
     @ApiResponse(responseCode = "401", description = "Authentication is required")
     @ApiResponse(responseCode = "404", description = "Task was not found")
     public void deleteById(
-            @PathVariable Long taskId,
-            Authentication authentication) {
+        @PathVariable Long taskId,
+        Authentication authentication) {
         taskService.deleteById(taskId, authentication.getName());
     }
 }

@@ -32,11 +32,11 @@ public class AdminUserService {
     @Transactional(readOnly = true)
     public PageResponse<UserResponse> findAll(Pageable pageable) {
         log.info("Admin fetching users. page={}, size={}, sort={}",
-                pageable.getPageNumber(), pageable.getPageSize(), pageable.getSort());
+            pageable.getPageNumber(), pageable.getPageSize(), pageable.getSort());
 
         return PageResponse.from(
-                userRepository.findAll(pageable)
-                        .map(userMapper::toResponse));
+            userRepository.findAll(pageable)
+                .map(userMapper::toResponse));
     }
 
     @Transactional(readOnly = true)
@@ -51,7 +51,7 @@ public class AdminUserService {
     @Transactional
     public UserResponse update(Long id, UserUpdateRequest request) {
         log.info("Admin updating user. userId={}, email={}, role={}",
-                id, request.email(), request.role());
+            id, request.email(), request.role());
 
         User user = getUserOrThrow(id);
 
@@ -65,7 +65,7 @@ public class AdminUserService {
         User savedUser = userRepository.save(validator.validate(user));
 
         log.info("Admin updated user successfully. userId={}, email={}, role={}",
-                savedUser.getId(), savedUser.getEmail(), savedUser.getRole());
+            savedUser.getId(), savedUser.getEmail(), savedUser.getRole());
 
         return userMapper.toResponse(savedUser);
     }
@@ -85,14 +85,14 @@ public class AdminUserService {
 
     private User getUserOrThrow(Long id) {
         return userRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException(USER_NOT_FOUND_MESSAGE.formatted(id)));
+            .orElseThrow(() -> new NotFoundException(USER_NOT_FOUND_MESSAGE.formatted(id)));
     }
 
     private void validateEmailIsUniqueForUpdate(String email, Long currentUserId) {
         userRepository.findByEmail(email)
-                .filter(existingUser -> !existingUser.getId().equals(currentUserId))
-                .ifPresent(existingUser -> {
-                    throw new ConflictException(EMAIL_ALREADY_EXISTS_MESSAGE.formatted(email));
-                });
+            .filter(existingUser -> !existingUser.getId().equals(currentUserId))
+            .ifPresent(existingUser -> {
+                throw new ConflictException(EMAIL_ALREADY_EXISTS_MESSAGE.formatted(email));
+            });
     }
 }
