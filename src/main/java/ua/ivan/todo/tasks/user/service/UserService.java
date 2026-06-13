@@ -1,6 +1,7 @@
 package ua.ivan.todo.tasks.user.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -22,6 +23,7 @@ import ua.ivan.todo.tasks.user.repository.UserRepository;
 @Service
 @RequiredArgsConstructor
 @Validated
+@Slf4j
 public class UserService {
 
     private static final String USER_NOT_FOUND_MESSAGE = "User with id '%d' was not found";
@@ -35,6 +37,8 @@ public class UserService {
 
     @Transactional
     public UserResponse register(UserRegistrationRequest request) {
+        log.info("Registering user. email={}", request.email());
+
         validateEmailIsUnique(request.email());
 
         User user = userMapper.toEntity(request);
@@ -43,11 +47,17 @@ public class UserService {
 
         User savedUser = userRepository.save(validator.validate(user));
 
+        log.info("User registered successfully. userId={}, email={}",
+            savedUser.getId(), savedUser.getEmail());
+
         return userMapper.toResponse(savedUser);
     }
 
     @Transactional(readOnly = true)
     public PageResponse<UserShortResponse> findAllShort(Pageable pageable) {
+        log.info("Fetching user catalog. page={}, size={}, sort={}",
+            pageable.getPageNumber(), pageable.getPageSize(), pageable.getSort());
+
         return PageResponse.from(
             userRepository.findAll(pageable)
                 .map(userMapper::toShortResponse));
@@ -55,6 +65,8 @@ public class UserService {
 
     @Transactional(readOnly = true)
     public UserShortResponse findShortById(Long id) {
+        log.info("Fetching public user information. userId={}", id);
+
         User user = getUserOrThrow(id);
 
         return userMapper.toShortResponse(user);
@@ -62,6 +74,8 @@ public class UserService {
 
     @Transactional(readOnly = true)
     public UserResponse findCurrentUser(String currentUserEmail) {
+        log.info("Fetching current user profile. email={}", currentUserEmail);
+
         User user = getUserByEmailOrThrow(currentUserEmail);
 
         return userMapper.toResponse(user);
@@ -69,6 +83,9 @@ public class UserService {
 
     @Transactional
     public UserResponse updateCurrentUser(String currentUserEmail, UserProfileUpdateRequest request) {
+        log.info("Updating current user profile. currentEmail={}, newEmail={}",
+            currentUserEmail, request.email());
+
         User user = getUserByEmailOrThrow(currentUserEmail);
 
         validateEmailIsUniqueForUpdate(request.email(), user.getId());
@@ -79,14 +96,22 @@ public class UserService {
 
         User savedUser = userRepository.save(validator.validate(user));
 
+        log.info("Current user profile updated successfully. userId={}, email={}",
+            savedUser.getId(), savedUser.getEmail());
+
         return userMapper.toResponse(savedUser);
     }
 
     @Transactional
     public void deleteCurrentUser(String currentUserEmail) {
+        log.info("Deleting current user profile. email={}", currentUserEmail);
+
         User user = getUserByEmailOrThrow(currentUserEmail);
 
         userRepository.delete(user);
+
+        log.info("Current user profile deleted successfully. userId={}, email={}",
+            user.getId(), user.getEmail());
     }
 
     private User getUserOrThrow(Long id) {
