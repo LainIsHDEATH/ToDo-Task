@@ -97,9 +97,9 @@ class JwtUtilsTest {
     @Test
     void extractUsernameShouldReturnJwtSubject() {
         Jwt jwt = jwt("token",
-                "user@mail.com",
-                Instant.now(),
-                Instant.now().plusSeconds(3600));
+            "user@mail.com",
+            Instant.now(),
+            Instant.now().plusSeconds(3600));
 
         when(jwtDecoder.decode("token")).thenReturn(jwt);
 
@@ -117,9 +117,9 @@ class JwtUtilsTest {
             .build();
 
         Jwt jwt = jwt("token",
-                "user@mail.com",
-                Instant.now(),
-                Instant.now().plusSeconds(3600));
+            "user@mail.com",
+            Instant.now(),
+            Instant.now().plusSeconds(3600));
 
         when(jwtDecoder.decode("token")).thenReturn(jwt);
 
@@ -137,9 +137,9 @@ class JwtUtilsTest {
             .build();
 
         Jwt jwt = jwt("token",
-                "user@mail.com",
-                Instant.now().minusSeconds(3600),
-                Instant.now().minusSeconds(60));
+            "user@mail.com",
+            Instant.now().minusSeconds(3600),
+            Instant.now().minusSeconds(60));
 
         when(jwtDecoder.decode("token")).thenReturn(jwt);
 
