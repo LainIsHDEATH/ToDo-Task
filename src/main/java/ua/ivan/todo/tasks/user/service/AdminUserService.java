@@ -1,6 +1,7 @@
 package ua.ivan.todo.tasks.user.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,6 +19,7 @@ import ua.ivan.todo.tasks.user.repository.UserRepository;
 @Service
 @RequiredArgsConstructor
 @Validated
+@Slf4j
 public class AdminUserService {
 
     private static final String USER_NOT_FOUND_MESSAGE = "User with id '%d' was not found";
@@ -29,13 +31,18 @@ public class AdminUserService {
 
     @Transactional(readOnly = true)
     public PageResponse<UserResponse> findAll(Pageable pageable) {
+        log.info("Admin fetching users. page={}, size={}, sort={}",
+                pageable.getPageNumber(), pageable.getPageSize(), pageable.getSort());
+
         return PageResponse.from(
-            userRepository.findAll(pageable)
-                .map(userMapper::toResponse));
+                userRepository.findAll(pageable)
+                        .map(userMapper::toResponse));
     }
 
     @Transactional(readOnly = true)
     public UserResponse findById(Long id) {
+        log.info("Admin fetching user. userId={}", id);
+
         User user = getUserOrThrow(id);
 
         return userMapper.toResponse(user);
@@ -43,6 +50,9 @@ public class AdminUserService {
 
     @Transactional
     public UserResponse update(Long id, UserUpdateRequest request) {
+        log.info("Admin updating user. userId={}, email={}, role={}",
+                id, request.email(), request.role());
+
         User user = getUserOrThrow(id);
 
         validateEmailIsUniqueForUpdate(request.email(), id);
@@ -54,28 +64,35 @@ public class AdminUserService {
 
         User savedUser = userRepository.save(validator.validate(user));
 
+        log.info("Admin updated user successfully. userId={}, email={}, role={}",
+                savedUser.getId(), savedUser.getEmail(), savedUser.getRole());
+
         return userMapper.toResponse(savedUser);
     }
 
     @Transactional
     public void deleteById(Long id) {
+        log.info("Admin deleting user. userId={}", id);
+
         if (!userRepository.existsById(id)) {
             throw new NotFoundException(USER_NOT_FOUND_MESSAGE.formatted(id));
         }
 
         userRepository.deleteById(id);
+
+        log.info("Admin deleted user successfully. userId={}", id);
     }
 
     private User getUserOrThrow(Long id) {
         return userRepository.findById(id)
-            .orElseThrow(() -> new NotFoundException(USER_NOT_FOUND_MESSAGE.formatted(id)));
+                .orElseThrow(() -> new NotFoundException(USER_NOT_FOUND_MESSAGE.formatted(id)));
     }
 
     private void validateEmailIsUniqueForUpdate(String email, Long currentUserId) {
         userRepository.findByEmail(email)
-            .filter(existingUser -> !existingUser.getId().equals(currentUserId))
-            .ifPresent(existingUser -> {
-                throw new ConflictException(EMAIL_ALREADY_EXISTS_MESSAGE.formatted(email));
-            });
+                .filter(existingUser -> !existingUser.getId().equals(currentUserId))
+                .ifPresent(existingUser -> {
+                    throw new ConflictException(EMAIL_ALREADY_EXISTS_MESSAGE.formatted(email));
+                });
     }
 }

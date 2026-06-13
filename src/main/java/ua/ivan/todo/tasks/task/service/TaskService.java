@@ -1,6 +1,7 @@
 package ua.ivan.todo.tasks.task.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,6 +27,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class TaskService {
 
     private static final String TASK_NOT_FOUND_MESSAGE = "Task with id '%d' was not found";
@@ -40,17 +42,22 @@ public class TaskService {
 
     @Transactional(readOnly = true)
     public PageResponse<TaskListItemResponse> findCurrentUserTasks(
-        String currentUserEmail,
-        Pageable pageable) {
+            String currentUserEmail,
+            Pageable pageable) {
+        log.info("Fetching current user tasks. email={}, page={}, size={}, sort={}",
+                currentUserEmail, pageable.getPageNumber(), pageable.getPageSize(), pageable.getSort());
+
         User currentUser = getCurrentUserOrThrow(currentUserEmail);
 
         return PageResponse.from(
-            taskRepository.findAllByOwnerId(currentUser.getId(), pageable)
-                .map(taskMapper::toListItemResponse));
+                taskRepository.findAllByOwnerId(currentUser.getId(), pageable)
+                        .map(taskMapper::toListItemResponse));
     }
 
     @Transactional(readOnly = true)
     public TaskResponse findById(Long taskId, String currentUserEmail) {
+        log.info("Fetching current user task. taskId={}, email={}", taskId, currentUserEmail);
+
         User currentUser = getCurrentUserOrThrow(currentUserEmail);
         Task task = getOwnedTaskOrThrow(taskId, currentUser);
 
@@ -59,6 +66,9 @@ public class TaskService {
 
     @Transactional
     public TaskResponse create(String currentUserEmail, TaskCreateRequest request) {
+        log.info("Creating current user task. email={}, collaboratorCount={}",
+                currentUserEmail, countCollaborators(request.collaboratorIds()));
+
         User currentUser = getCurrentUserOrThrow(currentUserEmail);
 
         Task task = taskMapper.toEntity(request);
@@ -68,11 +78,17 @@ public class TaskService {
 
         Task savedTask = taskRepository.save(validator.validate(task));
 
+        log.info("Current user task created successfully. taskId={}, ownerId={}",
+                savedTask.getId(), currentUser.getId());
+
         return taskMapper.toResponse(savedTask);
     }
 
     @Transactional
     public TaskResponse update(Long taskId, String currentUserEmail, TaskUpdateRequest request) {
+        log.info("Updating current user task. taskId={}, email={}, collaboratorCount={}",
+                taskId, currentUserEmail, countCollaborators(request.collaboratorIds()));
+
         User currentUser = getCurrentUserOrThrow(currentUserEmail);
         Task task = getOwnedTaskOrThrow(taskId, currentUser);
 
@@ -83,20 +99,28 @@ public class TaskService {
 
         Task savedTask = taskRepository.save(validator.validate(task));
 
+        log.info("Current user task updated successfully. taskId={}, ownerId={}",
+                savedTask.getId(), currentUser.getId());
+
         return taskMapper.toResponse(savedTask);
     }
 
     @Transactional
     public void deleteById(Long taskId, String currentUserEmail) {
+        log.info("Deleting current user task. taskId={}, email={}", taskId, currentUserEmail);
+
         User currentUser = getCurrentUserOrThrow(currentUserEmail);
         Task task = getOwnedTaskOrThrow(taskId, currentUser);
 
         taskRepository.delete(task);
+
+        log.info("Current user task deleted successfully. taskId={}, ownerId={}",
+                taskId, currentUser.getId());
     }
 
     private Task getOwnedTaskOrThrow(Long taskId, User currentUser) {
         Task task = taskRepository.findById(taskId)
-            .orElseThrow(() -> new NotFoundException(TASK_NOT_FOUND_MESSAGE.formatted(taskId)));
+                .orElseThrow(() -> new NotFoundException(TASK_NOT_FOUND_MESSAGE.formatted(taskId)));
 
         if (!task.getOwner().getId().equals(currentUser.getId())) {
             throw new NotFoundException(TASK_NOT_FOUND_MESSAGE.formatted(taskId));
@@ -107,7 +131,7 @@ public class TaskService {
 
     private User getCurrentUserOrThrow(String email) {
         return userRepository.findByEmail(email)
-            .orElseThrow(() -> new NotFoundException(CURRENT_USER_NOT_FOUND_MESSAGE));
+                .orElseThrow(() -> new NotFoundException(CURRENT_USER_NOT_FOUND_MESSAGE));
     }
 
     private Set<User> resolveCollaborators(Long ownerId, Set<Long> collaboratorIds) {
@@ -125,16 +149,24 @@ public class TaskService {
 
         if (collaborators.size() != normalizedCollaboratorIds.size()) {
             Set<Long> foundIds = collaborators.stream()
-                .map(User::getId)
-                .collect(Collectors.toSet());
+                    .map(User::getId)
+                    .collect(Collectors.toSet());
 
             Set<Long> missingIds = normalizedCollaboratorIds.stream()
-                .filter(id -> !foundIds.contains(id))
-                .collect(Collectors.toCollection(HashSet::new));
+                    .filter(id -> !foundIds.contains(id))
+                    .collect(Collectors.toCollection(HashSet::new));
 
             throw new NotFoundException(USERS_NOT_FOUND_MESSAGE.formatted(missingIds));
         }
 
         return new HashSet<>(collaborators);
+    }
+
+    private int countCollaborators(Set<Long> collaboratorIds) {
+        if (collaboratorIds == null) {
+            return 0;
+        }
+
+        return collaboratorIds.size();
     }
 }
