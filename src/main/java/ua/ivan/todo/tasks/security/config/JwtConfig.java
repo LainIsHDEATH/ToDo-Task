@@ -1,4 +1,4 @@
-package ua.ivan.todo.tasks.config;
+package ua.ivan.todo.tasks.security.config;
 
 import com.nimbusds.jose.jwk.source.ImmutableSecret;
 import org.springframework.beans.factory.annotation.Value;
