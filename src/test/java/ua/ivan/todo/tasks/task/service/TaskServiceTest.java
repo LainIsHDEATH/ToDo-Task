@@ -22,10 +22,10 @@ import ua.ivan.todo.tasks.task.model.Task;
 import ua.ivan.todo.tasks.task.model.TaskPriority;
 import ua.ivan.todo.tasks.task.model.TaskStatus;
 import ua.ivan.todo.tasks.task.repository.TaskRepository;
-import ua.ivan.todo.tasks.user.dto.response.UserShortResponse;
+import ua.ivan.todo.tasks.user.api.dto.response.UserShortResponse;
+import ua.ivan.todo.tasks.user.api.interfaces.UserReadFacade;
 import ua.ivan.todo.tasks.user.model.Role;
 import ua.ivan.todo.tasks.user.model.User;
-import ua.ivan.todo.tasks.user.repository.UserRepository;
 
 import java.util.HashSet;
 import java.util.List;
@@ -44,7 +44,7 @@ class TaskServiceTest {
     private TaskRepository taskRepository;
 
     @Mock
-    private UserRepository userRepository;
+    private UserReadFacade userReadFacade;
 
     @Mock
     private TaskMapper taskMapper;
@@ -92,7 +92,7 @@ class TaskServiceTest {
             pageable,
             2);
 
-        when(userRepository.findByEmail("owner@mail.com")).thenReturn(Optional.of(currentUser));
+        when(userReadFacade.findByEmail("owner@mail.com")).thenReturn(Optional.of(currentUser));
         when(taskRepository.findAllByOwnerId(1L, pageable)).thenReturn(tasksPage);
         when(taskMapper.toListItemResponse(firstTask)).thenReturn(firstResponse);
         when(taskMapper.toListItemResponse(secondTask)).thenReturn(secondResponse);
@@ -108,7 +108,7 @@ class TaskServiceTest {
         assertThat(actual.first()).isTrue();
         assertThat(actual.last()).isTrue();
 
-        verify(userRepository).findByEmail("owner@mail.com");
+        verify(userReadFacade).findByEmail("owner@mail.com");
         verify(taskRepository).findAllByOwnerId(1L, pageable);
     }
 
@@ -116,13 +116,13 @@ class TaskServiceTest {
     void findCurrentUserTasksShouldThrowNotFoundExceptionWhenCurrentUserDoesNotExist() {
         Pageable pageable = PageRequest.of(0, 20);
 
-        when(userRepository.findByEmail("missing@mail.com")).thenReturn(Optional.empty());
+        when(userReadFacade.findByEmail("missing@mail.com")).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> taskService.findCurrentUserTasks("missing@mail.com", pageable))
             .isInstanceOf(NotFoundException.class)
             .hasMessage("Current user was not found");
 
-        verify(userRepository).findByEmail("missing@mail.com");
+        verify(userReadFacade).findByEmail("missing@mail.com");
         verifyNoInteractions(taskRepository);
         verifyNoInteractions(taskMapper);
     }
@@ -140,7 +140,7 @@ class TaskServiceTest {
 
         TaskResponse response = taskResponse(task);
 
-        when(userRepository.findByEmail("owner@mail.com")).thenReturn(Optional.of(owner));
+        when(userReadFacade.findByEmail("owner@mail.com")).thenReturn(Optional.of(owner));
         when(taskRepository.findById(1L)).thenReturn(Optional.of(task));
         when(taskMapper.toResponse(task)).thenReturn(response);
 
@@ -148,7 +148,7 @@ class TaskServiceTest {
 
         assertThat(actual).isEqualTo(response);
 
-        verify(userRepository).findByEmail("owner@mail.com");
+        verify(userReadFacade).findByEmail("owner@mail.com");
         verify(taskRepository).findById(1L);
         verify(taskMapper).toResponse(task);
     }
@@ -157,14 +157,14 @@ class TaskServiceTest {
     void findByIdShouldThrowNotFoundExceptionWhenTaskDoesNotExist() {
         User owner = user(1L, "owner@mail.com", Role.USER);
 
-        when(userRepository.findByEmail("owner@mail.com")).thenReturn(Optional.of(owner));
+        when(userReadFacade.findByEmail("owner@mail.com")).thenReturn(Optional.of(owner));
         when(taskRepository.findById(99L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> taskService.findById(99L, "owner@mail.com"))
             .isInstanceOf(NotFoundException.class)
             .hasMessage("Task with id '99' was not found");
 
-        verify(userRepository).findByEmail("owner@mail.com");
+        verify(userReadFacade).findByEmail("owner@mail.com");
         verify(taskRepository).findById(99L);
         verifyNoInteractions(taskMapper);
     }
@@ -181,14 +181,14 @@ class TaskServiceTest {
             TaskStatus.TODO,
             anotherUser);
 
-        when(userRepository.findByEmail("current@mail.com")).thenReturn(Optional.of(currentUser));
+        when(userReadFacade.findByEmail("current@mail.com")).thenReturn(Optional.of(currentUser));
         when(taskRepository.findById(1L)).thenReturn(Optional.of(task));
 
         assertThatThrownBy(() -> taskService.findById(1L, "current@mail.com"))
             .isInstanceOf(NotFoundException.class)
             .hasMessage("Task with id '1' was not found");
 
-        verify(userRepository).findByEmail("current@mail.com");
+        verify(userReadFacade).findByEmail("current@mail.com");
         verify(taskRepository).findById(1L);
         verifyNoInteractions(taskMapper);
     }
@@ -216,7 +216,7 @@ class TaskServiceTest {
 
         TaskResponse response = taskResponse(savedTask);
 
-        when(userRepository.findByEmail("owner@mail.com")).thenReturn(Optional.of(owner));
+        when(userReadFacade.findByEmail("owner@mail.com")).thenReturn(Optional.of(owner));
         when(taskMapper.toEntity(request)).thenReturn(task);
         when(validator.validate(task)).thenReturn(task);
         when(taskRepository.save(task)).thenReturn(savedTask);
@@ -229,7 +229,7 @@ class TaskServiceTest {
         assertThat(task.getStatus()).isEqualTo(TaskStatus.TODO);
         assertThat(task.getCollaborators()).isEmpty();
 
-        verify(userRepository).findByEmail("owner@mail.com");
+        verify(userReadFacade).findByEmail("owner@mail.com");
         verify(taskMapper).toEntity(request);
         verify(validator).validate(task);
         verify(taskRepository).save(task);
@@ -262,9 +262,9 @@ class TaskServiceTest {
 
         TaskResponse response = taskResponse(savedTask);
 
-        when(userRepository.findByEmail("owner@mail.com")).thenReturn(Optional.of(owner));
+        when(userReadFacade.findByEmail("owner@mail.com")).thenReturn(Optional.of(owner));
         when(taskMapper.toEntity(request)).thenReturn(task);
-        when(userRepository.findAllById(Set.of(2L))).thenReturn(List.of(collaborator));
+        when(userReadFacade.findAllByIds(Set.of(2L))).thenReturn(List.of(collaborator));
         when(validator.validate(task)).thenReturn(task);
         when(taskRepository.save(task)).thenReturn(savedTask);
         when(taskMapper.toResponse(savedTask)).thenReturn(response);
@@ -276,7 +276,7 @@ class TaskServiceTest {
         assertThat(task.getStatus()).isEqualTo(TaskStatus.TODO);
         assertThat(task.getCollaborators()).containsExactly(collaborator);
 
-        verify(userRepository).findAllById(Set.of(2L));
+        verify(userReadFacade).findAllByIds(Set.of(2L));
         verify(taskRepository).save(task);
     }
 
@@ -294,16 +294,16 @@ class TaskServiceTest {
             .priority(TaskPriority.HIGH)
             .build();
 
-        when(userRepository.findByEmail("owner@mail.com")).thenReturn(Optional.of(owner));
+        when(userReadFacade.findByEmail("owner@mail.com")).thenReturn(Optional.of(owner));
         when(taskMapper.toEntity(request)).thenReturn(task);
 
         assertThatThrownBy(() -> taskService.create("owner@mail.com", request))
             .isInstanceOf(ConflictException.class)
             .hasMessage("Task owner cannot be added as collaborator");
 
-        verify(userRepository).findByEmail("owner@mail.com");
+        verify(userReadFacade).findByEmail("owner@mail.com");
         verify(taskMapper).toEntity(request);
-        verify(userRepository, never()).findAllById(any());
+        verify(userReadFacade, never()).findAllByIds(any());
         verify(taskRepository, never()).save(any());
         verifyNoInteractions(validator);
     }
@@ -323,15 +323,15 @@ class TaskServiceTest {
             .priority(TaskPriority.HIGH)
             .build();
 
-        when(userRepository.findByEmail("owner@mail.com")).thenReturn(Optional.of(owner));
+        when(userReadFacade.findByEmail("owner@mail.com")).thenReturn(Optional.of(owner));
         when(taskMapper.toEntity(request)).thenReturn(task);
-        when(userRepository.findAllById(Set.of(2L, 3L))).thenReturn(List.of(collaborator));
+        when(userReadFacade.findAllByIds(Set.of(2L, 3L))).thenReturn(List.of(collaborator));
 
         assertThatThrownBy(() -> taskService.create("owner@mail.com", request))
             .isInstanceOf(NotFoundException.class)
             .hasMessage("Users with ids [3] were not found");
 
-        verify(userRepository).findAllById(Set.of(2L, 3L));
+        verify(userReadFacade).findAllByIds(Set.of(2L, 3L));
         verify(taskRepository, never()).save(any());
         verifyNoInteractions(validator);
     }
@@ -356,9 +356,9 @@ class TaskServiceTest {
 
         TaskResponse response = taskResponse(task);
 
-        when(userRepository.findByEmail("owner@mail.com")).thenReturn(Optional.of(owner));
+        when(userReadFacade.findByEmail("owner@mail.com")).thenReturn(Optional.of(owner));
         when(taskRepository.findById(1L)).thenReturn(Optional.of(task));
-        when(userRepository.findAllById(Set.of(2L))).thenReturn(List.of(collaborator));
+        when(userReadFacade.findAllByIds(Set.of(2L))).thenReturn(List.of(collaborator));
         when(validator.validate(task)).thenReturn(task);
         when(taskRepository.save(task)).thenReturn(task);
         when(taskMapper.toResponse(task)).thenReturn(response);
@@ -392,7 +392,7 @@ class TaskServiceTest {
             TaskStatus.IN_PROGRESS,
             Set.of());
 
-        when(userRepository.findByEmail("current@mail.com")).thenReturn(Optional.of(currentUser));
+        when(userReadFacade.findByEmail("current@mail.com")).thenReturn(Optional.of(currentUser));
         when(taskRepository.findById(1L)).thenReturn(Optional.of(task));
 
         assertThatThrownBy(() -> taskService.update(1L, "current@mail.com", request))
@@ -415,12 +415,12 @@ class TaskServiceTest {
             TaskStatus.TODO,
             owner);
 
-        when(userRepository.findByEmail("owner@mail.com")).thenReturn(Optional.of(owner));
+        when(userReadFacade.findByEmail("owner@mail.com")).thenReturn(Optional.of(owner));
         when(taskRepository.findById(1L)).thenReturn(Optional.of(task));
 
         taskService.deleteById(1L, "owner@mail.com");
 
-        verify(userRepository).findByEmail("owner@mail.com");
+        verify(userReadFacade).findByEmail("owner@mail.com");
         verify(taskRepository).findById(1L);
         verify(taskRepository).delete(task);
     }
@@ -437,7 +437,7 @@ class TaskServiceTest {
             TaskStatus.TODO,
             anotherUser);
 
-        when(userRepository.findByEmail("current@mail.com")).thenReturn(Optional.of(currentUser));
+        when(userReadFacade.findByEmail("current@mail.com")).thenReturn(Optional.of(currentUser));
         when(taskRepository.findById(1L)).thenReturn(Optional.of(task));
 
         assertThatThrownBy(() -> taskService.deleteById(1L, "current@mail.com"))

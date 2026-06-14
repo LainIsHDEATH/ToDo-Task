@@ -1,4 +1,4 @@
-package ua.ivan.todo.tasks.config;
+package ua.ivan.todo.tasks.common.config;
 
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.enums.SecuritySchemeIn;

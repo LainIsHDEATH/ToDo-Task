@@ -1,9 +1,11 @@
-package ua.ivan.todo.tasks.user.dto.request;
+package ua.ivan.todo.tasks.user.api.dto.request;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import org.springframework.modulith.NamedInterface;
 
+@NamedInterface("UserRegistrationRequest")
 public record UserRegistrationRequest(
 
     @NotBlank(message = "First name is required") @Size(max = 100,

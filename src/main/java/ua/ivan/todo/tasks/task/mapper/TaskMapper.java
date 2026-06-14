@@ -2,16 +2,16 @@ package ua.ivan.todo.tasks.task.mapper;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-import ua.ivan.todo.tasks.config.MapStructConfig;
+import ua.ivan.todo.tasks.common.config.MapStructConfig;
 import ua.ivan.todo.tasks.task.dto.request.TaskCreateRequest;
 import ua.ivan.todo.tasks.task.dto.response.TaskListItemResponse;
 import ua.ivan.todo.tasks.task.dto.response.TaskResponse;
 import ua.ivan.todo.tasks.task.model.Task;
-import ua.ivan.todo.tasks.user.mapper.UserMapper;
+import ua.ivan.todo.tasks.user.api.mapper.UserApiMapper;
 
 @Mapper(
     config = MapStructConfig.class,
-    uses = UserMapper.class)
+    uses = {UserApiMapper.class})
 public interface TaskMapper {
 
     TaskResponse toResponse(Task task);

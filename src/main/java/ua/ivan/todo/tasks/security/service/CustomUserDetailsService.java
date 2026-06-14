@@ -7,8 +7,8 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ua.ivan.todo.tasks.user.api.interfaces.UserReadFacade;
 import ua.ivan.todo.tasks.user.model.User;
-import ua.ivan.todo.tasks.user.repository.UserRepository;
 
 import java.util.List;
 
@@ -18,12 +18,12 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     private static final String ROLE_PREFIX = "ROLE_";
 
-    private final UserRepository userRepository;
+    private final UserReadFacade userReadFacade;
 
     @Override
     @Transactional(readOnly = true)
     public UserDetails loadUserByUsername(String email) {
-        User user = userRepository.findByEmail(email)
+        User user = userReadFacade.findByEmail(email)
             .orElseThrow(() -> new UsernameNotFoundException(
                 "User with email '%s' was not found".formatted(email)));
 

@@ -9,7 +9,7 @@ import ua.ivan.todo.tasks.task.dto.response.TaskResponse;
 import ua.ivan.todo.tasks.task.model.Task;
 import ua.ivan.todo.tasks.task.model.TaskPriority;
 import ua.ivan.todo.tasks.task.model.TaskStatus;
-import ua.ivan.todo.tasks.user.mapper.UserMapperImpl;
+import ua.ivan.todo.tasks.user.api.mapper.UserApiMapperImpl;
 import ua.ivan.todo.tasks.user.model.Role;
 import ua.ivan.todo.tasks.user.model.User;
 
@@ -19,7 +19,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest(classes = {
     TaskMapperImpl.class,
-    UserMapperImpl.class
+    UserApiMapperImpl.class
 })
 class TaskMapperTest {
 

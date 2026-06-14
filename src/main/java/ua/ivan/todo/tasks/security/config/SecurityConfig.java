@@ -1,4 +1,4 @@
-package ua.ivan.todo.tasks.config;
+package ua.ivan.todo.tasks.security.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;

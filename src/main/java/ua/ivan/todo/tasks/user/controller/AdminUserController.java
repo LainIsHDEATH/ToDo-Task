@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import ua.ivan.todo.tasks.common.dto.response.PageResponse;
 import ua.ivan.todo.tasks.common.validation.SortValidator;
 import ua.ivan.todo.tasks.user.dto.request.UserUpdateRequest;
-import ua.ivan.todo.tasks.user.dto.response.UserResponse;
+import ua.ivan.todo.tasks.user.api.dto.response.UserResponse;
 import ua.ivan.todo.tasks.user.service.AdminUserService;
 
 import java.util.Set;

@@ -1,4 +1,4 @@
-package ua.ivan.todo.tasks.config;
+package ua.ivan.todo.tasks.common.config;
 
 import org.mapstruct.InjectionStrategy;
 import org.mapstruct.MapperConfig;
