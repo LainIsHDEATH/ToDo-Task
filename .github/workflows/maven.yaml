@@ -23,7 +23,8 @@ jobs:
       run: mvn -B package --file pom.xml
 
     - name: Test Reporter
-      uses: dorny/test-reporter@3d76b34a4535afbd0600d347b09a6ee5deb3ed7f
+      # #v1.5.0
+      uses: dorny/test-reporter@0d00bb14cb0cc2c9b8985df6e81dd333188224e1
       if: success() || failure()
       with:
         name: Tests Report
