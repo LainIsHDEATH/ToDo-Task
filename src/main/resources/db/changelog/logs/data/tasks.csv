@@ -1,0 +1,101 @@
+id,name,priority,status,owner_user_id
+1,Prepare project board 1,LOW,TODO,1
+2,Review API documentation 2,MEDIUM,IN_PROGRESS,2
+3,Test user task flow 3,HIGH,DONE,3
+4,Implement login page 4,LOW,TODO,4
+5,Fix registration validation 5,MEDIUM,IN_PROGRESS,5
+6,Update user profile form 6,HIGH,DONE,6
+7,Create task table 7,LOW,TODO,7
+8,Refactor task service 8,MEDIUM,IN_PROGRESS,8
+9,Write controller tests 9,HIGH,DONE,9
+10,Check security rules 10,LOW,TODO,10
+11,Prepare sprint demo 11,MEDIUM,IN_PROGRESS,11
+12,Update README 12,HIGH,DONE,12
+13,Review pull request 13,LOW,TODO,13
+14,Investigate frontend bug 14,MEDIUM,IN_PROGRESS,14
+15,Improve error handling 15,HIGH,DONE,15
+16,Add pagination controls 16,LOW,TODO,16
+17,Validate collaborator logic 17,MEDIUM,IN_PROGRESS,17
+18,Clean unused imports 18,HIGH,DONE,18
+19,Prepare release notes 19,LOW,TODO,19
+20,Test admin flow 20,MEDIUM,IN_PROGRESS,20
+21,Prepare project board 21,HIGH,DONE,21
+22,Review API documentation 22,LOW,TODO,22
+23,Test user task flow 23,MEDIUM,IN_PROGRESS,23
+24,Implement login page 24,HIGH,DONE,24
+25,Fix registration validation 25,LOW,TODO,25
+26,Update user profile form 26,MEDIUM,IN_PROGRESS,26
+27,Create task table 27,HIGH,DONE,27
+28,Refactor task service 28,LOW,TODO,28
+29,Write controller tests 29,MEDIUM,IN_PROGRESS,29
+30,Check security rules 30,HIGH,DONE,30
+31,Prepare sprint demo 31,LOW,TODO,1
+32,Update README 32,MEDIUM,IN_PROGRESS,2
+33,Review pull request 33,HIGH,DONE,3
+34,Investigate frontend bug 34,LOW,TODO,4
+35,Improve error handling 35,MEDIUM,IN_PROGRESS,5
+36,Add pagination controls 36,HIGH,DONE,6
+37,Validate collaborator logic 37,LOW,TODO,7
+38,Clean unused imports 38,MEDIUM,IN_PROGRESS,8
+39,Prepare release notes 39,HIGH,DONE,9
+40,Test admin flow 40,LOW,TODO,10
+41,Prepare project board 41,MEDIUM,IN_PROGRESS,11
+42,Review API documentation 42,HIGH,DONE,12
+43,Test user task flow 43,LOW,TODO,13
+44,Implement login page 44,MEDIUM,IN_PROGRESS,14
+45,Fix registration validation 45,HIGH,DONE,15
+46,Update user profile form 46,LOW,TODO,16
+47,Create task table 47,MEDIUM,IN_PROGRESS,17
+48,Refactor task service 48,HIGH,DONE,18
+49,Write controller tests 49,LOW,TODO,19
+50,Check security rules 50,MEDIUM,IN_PROGRESS,20
+51,Prepare sprint demo 51,HIGH,DONE,21
+52,Update README 52,LOW,TODO,22
+53,Review pull request 53,MEDIUM,IN_PROGRESS,23
+54,Investigate frontend bug 54,HIGH,DONE,24
+55,Improve error handling 55,LOW,TODO,25
+56,Add pagination controls 56,MEDIUM,IN_PROGRESS,26
+57,Validate collaborator logic 57,HIGH,DONE,27
+58,Clean unused imports 58,LOW,TODO,28
+59,Prepare release notes 59,MEDIUM,IN_PROGRESS,29
+60,Test admin flow 60,HIGH,DONE,30
+61,Prepare project board 61,LOW,TODO,1
+62,Review API documentation 62,MEDIUM,IN_PROGRESS,2
+63,Test user task flow 63,HIGH,DONE,3
+64,Implement login page 64,LOW,TODO,4
+65,Fix registration validation 65,MEDIUM,IN_PROGRESS,5
+66,Update user profile form 66,HIGH,DONE,6
+67,Create task table 67,LOW,TODO,7
+68,Refactor task service 68,MEDIUM,IN_PROGRESS,8
+69,Write controller tests 69,HIGH,DONE,9
+70,Check security rules 70,LOW,TODO,10
+71,Prepare sprint demo 71,MEDIUM,IN_PROGRESS,11
+72,Update README 72,HIGH,DONE,12
+73,Review pull request 73,LOW,TODO,13
+74,Investigate frontend bug 74,MEDIUM,IN_PROGRESS,14
+75,Improve error handling 75,HIGH,DONE,15
+76,Add pagination controls 76,LOW,TODO,16
+77,Validate collaborator logic 77,MEDIUM,IN_PROGRESS,17
+78,Clean unused imports 78,HIGH,DONE,18
+79,Prepare release notes 79,LOW,TODO,19
+80,Test admin flow 80,MEDIUM,IN_PROGRESS,20
+81,Prepare project board 81,HIGH,DONE,21
+82,Review API documentation 82,LOW,TODO,22
+83,Test user task flow 83,MEDIUM,IN_PROGRESS,23
+84,Implement login page 84,HIGH,DONE,24
+85,Fix registration validation 85,LOW,TODO,25
+86,Update user profile form 86,MEDIUM,IN_PROGRESS,26
+87,Create task table 87,HIGH,DONE,27
+88,Refactor task service 88,LOW,TODO,28
+89,Write controller tests 89,MEDIUM,IN_PROGRESS,29
+90,Check security rules 90,HIGH,DONE,30
+91,Prepare sprint demo 91,LOW,TODO,1
+92,Update README 92,MEDIUM,IN_PROGRESS,2
+93,Review pull request 93,HIGH,DONE,3
+94,Investigate frontend bug 94,LOW,TODO,4
+95,Improve error handling 95,MEDIUM,IN_PROGRESS,5
+96,Add pagination controls 96,HIGH,DONE,6
+97,Validate collaborator logic 97,LOW,TODO,7
+98,Clean unused imports 98,MEDIUM,IN_PROGRESS,8
+99,Prepare release notes 99,HIGH,DONE,9
+100,Test admin flow 100,LOW,TODO,10

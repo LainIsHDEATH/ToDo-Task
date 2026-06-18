@@ -12,6 +12,7 @@ spring:
   liquibase:
     user: ${DB_USERNAME:postgres}
     password: ${DB_PASSWORD:postgres}
+    contexts: dev
 
 security:
   jwt:
