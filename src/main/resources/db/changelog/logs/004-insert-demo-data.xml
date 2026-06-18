@@ -9,11 +9,10 @@
     <changeSet id="004-insert-demo-users" author="Ivan" contextFilter="@dev">
         <comment>Insert demo users for local manual testing.</comment>
 
-        <loadData file="data/users.csv"
+        <loadData file="db/data/users.csv"
                   tableName="users"
                   separator=","
-                  encoding="UTF-8"
-                  relativeToChangelogFile="true">
+                  encoding="UTF-8">
             <column name="id" type="NUMERIC"/>
             <column name="first_name" type="STRING"/>
             <column name="last_name" type="STRING"/>
@@ -30,11 +29,10 @@
     <changeSet id="004-insert-demo-tasks" author="Ivan" contextFilter="@dev">
         <comment>Insert demo tasks for local manual testing.</comment>
 
-        <loadData file="data/tasks.csv"
+        <loadData file="db/data/tasks.csv"
                   tableName="tasks"
                   separator=","
-                  encoding="UTF-8"
-                  relativeToChangelogFile="true">
+                  encoding="UTF-8">
             <column name="id" type="NUMERIC"/>
             <column name="name" type="STRING"/>
             <column name="priority" type="STRING"/>
@@ -50,11 +48,10 @@
     <changeSet id="004-insert-demo-task-collaborators" author="Ivan" contextFilter="@dev">
         <comment>Insert demo task collaborators for local manual testing.</comment>
 
-        <loadData file="data/task-collaborators.csv"
+        <loadData file="db/data/task-collaborators.csv"
                   tableName="task_collaborators"
                   separator=","
-                  encoding="UTF-8"
-                  relativeToChangelogFile="true">
+                  encoding="UTF-8">
             <column name="task_id" type="NUMERIC"/>
             <column name="user_id" type="NUMERIC"/>
         </loadData>
