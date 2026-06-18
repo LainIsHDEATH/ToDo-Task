@@ -9,5 +9,6 @@
     <include file="db/changelog/logs/001-create-users-table.xml"/>
     <include file="db/changelog/logs/002-create-tasks-table.xml"/>
     <include file="db/changelog/logs/003-create-task-collaborators-table.xml"/>
+    <include file="db/changelog/logs/004-insert-demo-data.xml"/>
 
 </databaseChangeLog>
